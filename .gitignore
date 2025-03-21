@@ -1,6 +1,6 @@
 # Data Files
-data/
-!data/schema.txt
+!data/*.txt
+data/*.*
 storage/
 
 # Byte-compiled / optimized / DLL files
