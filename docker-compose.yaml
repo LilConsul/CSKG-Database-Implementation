@@ -5,9 +5,10 @@ services:
     volumes:
       - ./storage/zero:/dgraph
       - ./data:/dgraph/data
+      - ./graphQL:/dgraph/graphQL
     ports:
-      - 5080:5080
-      - 6080:6080
+      - "5080:5080"
+      - "6080:6080"
     restart: on-failure
     command: dgraph zero --my=zero:5080
 
@@ -17,9 +18,10 @@ services:
     volumes:
       - ./storage/alpha:/dgraph
       - ./data:/dgraph/data
+      - ./graphQL:/dgraph/graphQL
     ports:
-      - 8080:8080
-      - 9080:9080
+      - "8080:8080"
+      - "9080:9080"
     restart: on-failure
     command: dgraph alpha --my=alpha:7080 --zero=zero:5080
 
@@ -27,6 +29,5 @@ services:
     image: dgraph/ratel:latest
     container_name: dgraph_ratel
     ports:
-      - 8000:8000
+      - "8000:8000"
     command: dgraph-ratel
-
