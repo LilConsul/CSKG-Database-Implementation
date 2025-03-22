@@ -1,13 +1,13 @@
 type Node {
-    n_id: String! @id @search(by: [hash])    # /c/en/empty_set/number/wp
-    n_label: String! @search(by: [term])     # "empty_set"
+    id: String! @id @search(by: [hash])    # /c/en/empty_set/number/wp
+    label: String! @search(by: [term])     # "empty_set"
 
-    relations: [Relationship] @hasInverse(field: successor)
+    relations: [Rel] @hasInverse(field: successor)
 }
 
-type Relationship {
-    r_id: String! @id      # /r/IsA/
-    r_label: String!       # "is a"
+type Rel {
+    id: String! @id      # /r/IsA/
+    label: String!       # "is a"
 
     successor: Node!
     predecessor: Node!
