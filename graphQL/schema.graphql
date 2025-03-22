@@ -2,7 +2,8 @@ type Node {
     id: String! @id @search(by: [hash])    # /c/en/empty_set/number/wp
     label: String! @search(by: [term])     # "empty_set"
 
-    relations: [Rel] @hasInverse(field: successor)
+    from: [Rel] @hasInverse(field: predecessor)
+    to: [Rel] @hasInverse(field: successor)
 }
 
 type Rel {

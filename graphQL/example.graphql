@@ -1,0 +1,20 @@
+{
+  getNode(func: eq(Node.id, "/c/en/0"), first: 1) {
+    Node.id
+    Node.label
+    to @filter(eq(Rel.id, "/r/DerivedFrom")) {
+      Rel.id
+      Rel.label
+      predecessor {
+          Node.id
+      }
+    }
+  	from {
+        Rel.id
+        Rel.label
+        successor {
+            Node.id
+      }
+    }
+}
+}
