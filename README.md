@@ -47,7 +47,7 @@ type Node {
 
 ### Schema Visualization
 
-<img src="./img/schema-diagram.svg" alt="Schema Diagram" style="width:100%; height:auto;" />
+<img src="./img/drgaph-shema.svg" alt="Schema Diagram" style="width:100%; height:auto;" />
 
 ### Field Descriptions
 
