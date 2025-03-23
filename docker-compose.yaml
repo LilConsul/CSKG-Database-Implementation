@@ -4,26 +4,28 @@ services:
     container_name: dgraph_zero
     volumes:
       - ./storage/zero:/dgraph
-      - ./data:/dgraph/data
-      - ./graphQL:/dgraph/graphQL
     ports:
       - "5080:5080"
       - "6080:6080"
     restart: on-failure
-    command: dgraph zero --my=zero:5080
+    command: dgraph zero --bindall=true --my=zero:5080
 
   alpha:
     image: dgraph/dgraph:latest
     container_name: dgraph_alpha
     volumes:
-      - ./storage/alpha:/dgraph
-      - ./data:/dgraph/data
-      - ./graphQL:/dgraph/graphQL
+      - ./src/bulk_or_alpha.sh:/dgraph/bulk_or_alpha.sh   # Entry point
+      - ./graphQL:/dgraph/graphQL                         # Schema
+      - ./data:/dgraph/data                               # Data to load into DGraph
+      - ./storage/alpha:/dgraph                           # DGraph loaded data
     ports:
+      - "7080:7080"
       - "8080:8080"
       - "9080:9080"
     restart: on-failure
-    command: dgraph alpha --my=alpha:7080 --zero=zero:5080
+    depends_on:
+      - zero
+    command: bash ./bulk_or_alpha.sh
 
   ratel:
     image: dgraph/ratel:latest

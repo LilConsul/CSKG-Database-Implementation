@@ -1,0 +1,9 @@
+id: string @unique @index(exact, term) .
+label: string  @index(hash).
+to: [uid] @reverse .
+
+type Node{
+    id
+    label
+    to
+}
