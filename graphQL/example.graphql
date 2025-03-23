@@ -1,13 +1,17 @@
 ####
 {
-
-    data(func: has(id), first: 1) {
+  data(func: has(id), first: 100) {
     id
-    to:~to @facets(eq(id, "/r/RelatedTo"))@facets(id){
-        id
+    from:~to @facets(eq(id, "/r/RelatedTo"))
+      @facets(label) {
+        label
+    }
+    to:to @facets(eq(id, "/r/RelatedTo"))
+      @facets(label) {
+        label
     }
 
-}
+  }
 }
 #####
 {
