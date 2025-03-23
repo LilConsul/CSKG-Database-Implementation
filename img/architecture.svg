@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 180">
+  <!-- Background -->
+  <rect width="720" height="180" fill="white"/>
+
+  <!-- User Box -->
+  <rect x="40" y="40" width="100" height="80" rx="4" ry="4" fill="white" stroke="#333" stroke-width="2"/>
+  <text x="90" y="70" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">User</text>
+
+  <!-- Python CLI Box -->
+  <rect x="220" y="40" width="100" height="80" rx="4" ry="4" fill="white" stroke="#333" stroke-width="2"/>
+  <text x="270" y="70" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">Python CLI</text>
+
+  <!-- Dgraph Client Box -->
+  <rect x="400" y="40" width="120" height="80" rx="4" ry="4" fill="white" stroke="#333" stroke-width="2"/>
+  <text x="460" y="70" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">Dgraph Client</text>
+  <text x="460" y="90" font-family="Arial" font-size="12" text-anchor="middle" fill="#666">(gRPC)</text>
+
+  <!-- Dgraph Database Box -->
+  <rect x="600" y="40" width="120" height="80" rx="4" ry="4" fill="white" stroke="#333" stroke-width="2"/>
+  <text x="660" y="70" font-family="Arial" font-size="14" text-anchor="middle" fill="#333">Dgraph Database</text>
+
+  <!-- Forward Arrows -->
+  <line x1="140" y1="65" x2="210" y2="65" stroke="#333" stroke-width="2"/>
+  <polygon points="210,65 200,60 200,70" fill="#333"/>
+
+  <line x1="320" y1="65" x2="390" y2="65" stroke="#333" stroke-width="2"/>
+  <polygon points="390,65 380,60 380,70" fill="#333"/>
+
+  <line x1="520" y1="65" x2="590" y2="65" stroke="#333" stroke-width="2"/>
+  <polygon points="590,65 580,60 580,70" fill="#333"/>
+
+  <!-- Backward Arrows -->
+  <line x1="210" y1="95" x2="140" y2="95" stroke="#333" stroke-width="2"/>
+  <polygon points="140,95 150,100 150,90" fill="#333"/>
+
+  <line x1="390" y1="95" x2="320" y2="95" stroke="#333" stroke-width="2"/>
+  <polygon points="320,95 330,100 330,90" fill="#333"/>
+
+  <line x1="590" y1="95" x2="520" y2="95" stroke="#333" stroke-width="2"/>
+  <polygon points="520,95 530,100 530,90" fill="#333"/>
+</svg>
