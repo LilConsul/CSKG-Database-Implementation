@@ -28,30 +28,35 @@
 
 ## 📐 Database Design
 
-### GraphQL Type Definition
+### Schema Definition
 ```graphql
+id: string @unique @index(hash) .
+label: string @index(term) .
+to: [uid] @reverse # @facet(id, label) - only to documentation purposes.
+
 type Node {
-  id: string @unique @index(exact, term)
-  label: string @index(hash)
-  to: [uid] @reverse @facets(id, label)
+    id
+    label
+    to
 }
 ```
 
 ### Schema Details
 • id: string
   - Unique identifier for each node
-  - Constraints: @unique, @index(exact, term)
-  - Ensures exact and term-based lookups
+  - Constraints: @unique, @index(hash)
+  - Enables fast lookups via hash indexing
 
 • label: string
   - Descriptive label for each node
-  - Constraints: @index(hash)
-  - Enables fast equality-based searches
+  - Constraints: @index(term)
+  - Supports term-based text search
 
 • to: [uid]
   - References to connected nodes
-  - Constraints: @reverse, @facets(id, label)
-  - Supports bidirectional relationships with metadata
+  - Constraints: @reverse
+  - Supports bidirectional relationship navigation
+  - **`Each have a @facet to store additional edge properties (id and label)`**
 
 ### Key Design Decisions
 - Directed graph structure with rich relationship metadata
