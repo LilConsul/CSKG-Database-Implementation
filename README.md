@@ -18,7 +18,7 @@
 
 ## 🏗️ Architecture
 
-<img src="./img/architecture.svg" alt="Architecture Diagram" width="800"/>
+<img src="./img/architecture.svg" alt="Architecture Diagram" style="width:100%; height:auto;"/>
 
 ### Components
 1. Docker - Application containerization for consistent environments
@@ -28,11 +28,14 @@
 
 ## 📐 Database Design
 
-### Schema Definition
+# Schema Definition and Details
+
+## Dgraph Schema
+
 ```graphql
 id: string @unique @index(hash) .
 label: string @index(term) .
-to: [uid] @reverse # @facet(id, label) - only to documentation purposes.
+to: [uid] @reverse @facet(id, label) .
 
 type Node {
     id
@@ -41,22 +44,42 @@ type Node {
 }
 ```
 
-### Schema Details
-• id: string
-  - Unique identifier for each node
-  - Constraints: @unique, @index(hash)
-  - Enables fast lookups via hash indexing
+## Schema Visualization
 
-• label: string
-  - Descriptive label for each node
-  - Constraints: @index(term)
-  - Supports term-based text search
+<img src="./img/drgaph-shema.svg" alt="Schema Diagram" width="600" />
 
-• to: [uid]
-  - References to connected nodes
-  - Constraints: @reverse
-  - Supports bidirectional relationship navigation
-  - **`Each have a @facet to store additional edge properties (id and label)`**
+## Field Descriptions
+
+| Field | Type | Constraints | Description |
+|-------|------|-------------|-------------|
+| `id` | `string` | `@unique @index(hash)` | Unique identifier for each node. The hash index enables fast lookups by ID. |
+| `label` | `string` | `@index(term)` | Descriptive label for the node. Term indexing supports text search functionality. |
+| `to` | `[uid]` | `@reverse @facet(id, label)` | Array of references to connected nodes. The `@reverse` directive enables bidirectional navigation between nodes. Each connection includes facets (edge properties) storing `id` and `label` metadata. |
+
+## Edge Properties (Facets)
+
+Each edge in the `to` field contains additional properties:
+
+- **id**: Unique identifier for the edge
+- **label**: Descriptive label for the relationship
+
+## Usage Example
+
+```graphql
+{
+  nodes(func: eq(id, "root-node")) {
+    id
+    label
+    to @facets {
+      id
+      label
+      # Recursive traversal if needed
+    }
+  }
+}
+```
+
+This schema design enables efficient graph traversal with metadata on both nodes and edges, supporting complex relationship modeling.
 
 ### Key Design Decisions
 - Directed graph structure with rich relationship metadata
