@@ -47,7 +47,7 @@ type Node {
 
 ### Schema Visualization
 
-<img src="./img/drgaph-shema.svg" alt="Schema Diagram" style="width:100%; height:auto;" />
+<img src="./img/drgaph-shema.svg" alt="Example Data Diagram" style="width:100%; height:auto;" />
 
 ### Field Descriptions
 
@@ -81,7 +81,7 @@ _:_c_en_0 <to> _:_c_en_empty_set (id="/r/DefinedAs", label="defined as") .
 
 ### Data Example Visualization
 
-<img src="./img/drgaph-shema.svg" alt="Example Data Diagram" style="width:100%; height:auto;" />
+<img src="./img/data-visualization.svg" alt="Example Data Diagram" style="width:100%; height:auto;" />
 
 ### Key Design Decisions
 - Directed graph structure with rich relationship metadata
