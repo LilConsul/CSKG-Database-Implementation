@@ -1,20 +1,23 @@
+####
 {
-  getNode(func: eq(Node.id, "/c/en/0"), first: 1) {
-    Node.id
-    Node.label
-    to @filter(eq(Rel.id, "/r/DerivedFrom")) {
-      Rel.id
-      Rel.label
-      predecessor {
-          Node.id
-      }
+
+    data(func: has(id), first: 1) {
+    id
+    to:~to @facets(eq(id, "/r/RelatedTo"))@facets(id){
+        id
     }
-  	from {
-        Rel.id
-        Rel.label
-        successor {
-            Node.id
-      }
-    }
+
 }
+}
+#####
+{
+	A as var(func: eq(id, "/c/en/0"))
+ 	M as var(func: eq(id, "/c/en/25/n/wn/quantity"))
+
+ path as shortest(from: uid(A), to: uid(M)) {
+  to
+ }
+ path(func: uid(path)) {
+   id
+ }
 }
