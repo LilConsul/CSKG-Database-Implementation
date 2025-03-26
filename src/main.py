@@ -3,7 +3,7 @@ import json
 import click
 
 import queries
-from utils import dgraph_read
+from utils import dgraph_read, dgraph_write
 
 
 @click.group()
@@ -167,6 +167,108 @@ def count_nodes_single_neighbor():
         exit(1)
 
 
+@click.command()
+@click.argument("node_id", required=True)
+@click.argument("new_label", required=True)
+def rename_node(node_id, new_label):
+    """Rename a given node by updating its label."""
+    try:
+        # First locate the node UID
+        node_info = dgraph_read(
+            """
+            query getNode($id: string) {
+                node(func: eq(id, $id)) {
+                    uid
+                }
+            }
+        """,
+            variables={"$id": node_id},
+        )
+
+        if not node_info.get("node"):
+            click.echo(f"Node with ID {node_id} not found", err=True)
+            exit(1)
+
+        uid = node_info["node"][0]["uid"]
+
+        # Create mutation using the node's UID
+        mutation = f"""
+        {{
+            set {{
+                <{uid}> <label> "{new_label}" .
+            }}
+        }}
+        """
+
+        # Execute the mutation
+        result = dgraph_write(mutation)
+        click.echo(f"Successfully renamed node {node_id} to '{new_label}'")
+    except Exception as e:
+        click.echo(f"Failed to rename node: {str(e)}", err=True)
+        exit(1)
+
+
+@click.command()
+@click.argument("node_id", required=True)
+def find_similar_nodes(node_id):
+    """Find all 'similar' nodes that share common parents or children via the same edge type."""
+    try:
+        results = dgraph_read(queries.SIMILAR_NODES_QUERY, variables={"$id": node_id})
+        click.echo(json.dumps(results, indent=2))
+    except Exception as e:
+        click.echo(f"Failed to find similar nodes for {node_id}: {str(e)}", err=True)
+        exit(1)
+
+
+@click.command()
+@click.argument("node_id1", required=True)
+@click.argument("node_id2", required=True)
+def find_shortest_path(node_id1, node_id2):
+    """Find the shortest path between two nodes, ignoring edge direction."""
+    try:
+        results = dgraph_read(
+            queries.SHORTEST_PATH_QUERY, variables={"$id1": node_id1, "$id2": node_id2}
+        )
+        click.echo(json.dumps(results, indent=2))
+    except Exception as e:
+        click.echo(
+            f"Failed to find path between {node_id1} and {node_id2}: {str(e)}", err=True
+        )
+        exit(1)
+
+
+@click.command()
+@click.argument("node_id", required=True)
+@click.argument("distance", type=int, required=True)
+def find_distant_synonyms(node_id, distance):
+    """Find all distant synonyms at a specified path distance."""
+    try:
+        results = dgraph_read(
+            queries.DISTANT_SYNONYMS_QUERY,
+            variables={"$id": node_id, "$distance": distance},
+        )
+        click.echo(json.dumps(results, indent=2))
+    except Exception as e:
+        click.echo(f"Failed to find distant synonyms for {node_id}: {str(e)}", err=True)
+        exit(1)
+
+
+@click.command()
+@click.argument("node_id", required=True)
+@click.argument("distance", type=int, required=True)
+def find_distant_antonyms(node_id, distance):
+    """Find all distant antonyms at a specified path distance."""
+    try:
+        results = dgraph_read(
+            queries.DISTANT_ANTONYMS_QUERY,
+            variables={"$id": node_id, "$distance": distance},
+        )
+        click.echo(json.dumps(results, indent=2))
+    except Exception as e:
+        click.echo(f"Failed to find distant antonyms for {node_id}: {str(e)}", err=True)
+        exit(1)
+
+
 # Add all commands to the CLI group
 cli.add_command(find_successors)
 cli.add_command(count_successors)
@@ -181,6 +283,11 @@ cli.add_command(count_nodes_no_successors)
 cli.add_command(count_nodes_no_predecessors)
 cli.add_command(find_nodes_most_neighbors)
 cli.add_command(count_nodes_single_neighbor)
+cli.add_command(rename_node)
+cli.add_command(find_similar_nodes)
+cli.add_command(find_shortest_path)
+cli.add_command(find_distant_synonyms)
+cli.add_command(find_distant_antonyms)
 
 if __name__ == "__main__":
     cli()

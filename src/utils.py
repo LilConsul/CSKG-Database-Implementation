@@ -53,12 +53,12 @@ def dgraph_read(
         raise
 
 
-def dgraph_write(mutations: list, commit_now: bool = True) -> Dict[str, Any]:
+def dgraph_write(mutations, commit_now: bool = True) -> Dict[str, Any]:
     """
     Execute write operations against Dgraph.
 
     Args:
-        mutations: List of mutations to apply
+        mutations: List of mutations to apply or a string containing a mutation
         commit_now: Whether to commit immediately
 
     Returns:
@@ -68,7 +68,13 @@ def dgraph_write(mutations: list, commit_now: bool = True) -> Dict[str, Any]:
         with dgraph_service() as client:
             txn = client.txn()
             try:
-                response = txn.mutate(set_obj=mutations, commit_now=commit_now)
+                if isinstance(mutations, str):
+                    # Handle string mutation (DQL format)
+                    response = txn.mutate(mutation=mutations, commit_now=commit_now)
+                else:
+                    # Handle object mutations
+                    response = txn.mutate(set_obj=mutations, commit_now=commit_now)
+
                 if not commit_now:
                     txn.commit()
                 return {"uids": response.uids}

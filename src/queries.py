@@ -159,3 +159,23 @@ NODES_SINGLE_NEIGHBOR_QUERY = """
   }
 }
 """
+
+RENAME_NODE_MUTATION = """
+
+"""
+
+SIMILAR_NODES_QUERY = """
+
+"""
+
+SHORTEST_PATH_QUERY = """
+
+"""
+
+DISTANT_SYNONYMS_QUERY = """
+
+"""
+
+DISTANT_ANTONYMS_QUERY = """
+
+"""
