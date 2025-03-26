@@ -107,7 +107,6 @@ query countAllNodes {
 }
 """
 
-# TODO: fix query
 NODES_NO_SUCCESSORS_QUERY = """
 query countNodesWithoutSuccessors {
   nodes(func: has(id)) @filter(not has(to)) {
@@ -116,7 +115,6 @@ query countNodesWithoutSuccessors {
 }
 """
 
-# TODO: fix query
 NODES_NO_PREDECESSORS_QUERY = """
 query countNodesWithoutPredecessors {
   nodes(func: has(id)) @filter(not has(~to)) {
