@@ -125,7 +125,7 @@ def count_nodes():
 
 @click.command()
 def count_nodes_no_successors():
-    """ERROR NEED TO FIX Count nodes which do not have any successors."""
+    """Count nodes which do not have any successors."""
     try:
         results = dgraph_read(queries.NODES_NO_SUCCESSORS_QUERY)
         click.echo(json.dumps(results, indent=2))
@@ -136,7 +136,7 @@ def count_nodes_no_successors():
 
 @click.command()
 def count_nodes_no_predecessors():
-    """ERROR NEED TO FIX Count nodes which do not have any predecessors."""
+    """Count nodes which do not have any predecessors."""
     try:
         results = dgraph_read(queries.NODES_NO_PREDECESSORS_QUERY)
         click.echo(json.dumps(results, indent=2))
