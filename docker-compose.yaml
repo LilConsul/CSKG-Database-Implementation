@@ -34,3 +34,17 @@ services:
     ports:
       - "8000:8000"
     command: dgraph-ratel
+
+  dbcli:
+    container_name:
+      dbcli_python
+    build:
+        context: ./src
+        dockerfile: Dockerfile
+    volumes:
+      - ./data:/data
+      - ./src/:/code
+      - /code/.venv
+    stdin_open: true
+    tty: true
+    restart: on-failure
