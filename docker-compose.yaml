@@ -1,3 +1,4 @@
+name: dbcli-client
 services:
   zero:
     image: dgraph/dgraph:latest
