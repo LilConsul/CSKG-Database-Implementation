@@ -132,13 +132,13 @@ NODES_MOST_NEIGHBORS_QUERY = """
     total_neighbors as math(successors_count + predecessors_count)
   }
 
-  maxNeighborsValue as var(func: has(id)) {
-    max_val as max(val(total_neighbors))
+  var(){
+		M as max(val(total_neighbors))
   }
-
-  nodes_with_most_neighbors(func: has(id)) @filter(eq(val(total_neighbors), max_val)) {
-    id
-    total_neighbors: val(total_neighbors)
+      
+  nodes_with_most_neighbors(func: uid(M)) {
+    uid
+    total_neighbors: val(M)
   }
 }
 """

@@ -45,6 +45,9 @@ services:
       - ./data:/data
       - ./src/:/code
       - /code/.venv
+    environment:
+      -DGRAPH_HOST: "dgraph_alpha"
+      -DGRAPH_PORT: "9080"
     stdin_open: true
     tty: true
     restart: on-failure
