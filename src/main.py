@@ -11,6 +11,26 @@ def cli():
     """CLI entry point for Dgraph operations."""
     pass
 
+@click.command()
+def setup():
+    """Prepare the environment: create directories, download data, and start Docker containers."""
+    pass
+
+@click.command()
+def cleanup():
+    """Remove all containers, volumes, images, and clear data and storage directories."""
+    pass
+
+@click.command()
+def run():
+    """Start the Docker containers."""
+    pass
+
+@click.command()
+def stop():
+    """Stop the Docker containers."""
+    pass
+
 
 @click.command()
 @click.argument("node_id", required=True)
@@ -270,6 +290,11 @@ def find_distant_antonyms(node_id, distance):
 
 
 # Add all commands to the CLI group
+# Add the shell commands to the CLI group
+cli.add_command(setup)
+cli.add_command(cleanup)
+cli.add_command(run)
+cli.add_command(stop)
 cli.add_command(find_successors)
 cli.add_command(count_successors)
 cli.add_command(find_predecessors)
