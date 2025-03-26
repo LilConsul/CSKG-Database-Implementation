@@ -191,7 +191,7 @@ def count_nodes_single_neighbor():
 @click.argument("node_id", required=True)
 @click.argument("new_label", required=True)
 def rename_node(node_id, new_label):
-    """Rename a given node by updating its label."""
+    """ERROR NEED TO FIX Rename a given node by updating its label."""
     try:
         # First locate the node UID
         node_info = dgraph_read(
@@ -231,7 +231,7 @@ def rename_node(node_id, new_label):
 @click.command()
 @click.argument("node_id", required=True)
 def find_similar_nodes(node_id):
-    """Find all 'similar' nodes that share common parents or children via the same edge type."""
+    """ERROR NEED TO FIX Find all 'similar' nodes that share common parents or children via the same edge type."""
     try:
         results = dgraph_read(queries.SIMILAR_NODES_QUERY, variables={"$id": node_id})
         click.echo(json.dumps(results, indent=2))
@@ -244,7 +244,7 @@ def find_similar_nodes(node_id):
 @click.argument("node_id1", required=True)
 @click.argument("node_id2", required=True)
 def find_shortest_path(node_id1, node_id2):
-    """Find the shortest path between two nodes, ignoring edge direction."""
+    """ERROR NEED TO FIX Find the shortest path between two nodes, ignoring edge direction."""
     try:
         results = dgraph_read(
             queries.SHORTEST_PATH_QUERY, variables={"$id1": node_id1, "$id2": node_id2}
@@ -261,7 +261,7 @@ def find_shortest_path(node_id1, node_id2):
 @click.argument("node_id", required=True)
 @click.argument("distance", type=int, required=True)
 def find_distant_synonyms(node_id, distance):
-    """Find all distant synonyms at a specified path distance."""
+    """ERROR NEED TO FIX Find all distant synonyms at a specified path distance."""
     try:
         results = dgraph_read(
             queries.DISTANT_SYNONYMS_QUERY,
@@ -277,7 +277,7 @@ def find_distant_synonyms(node_id, distance):
 @click.argument("node_id", required=True)
 @click.argument("distance", type=int, required=True)
 def find_distant_antonyms(node_id, distance):
-    """Find all distant antonyms at a specified path distance."""
+    """ERROR NEED TO FIX Find all distant antonyms at a specified path distance."""
     try:
         results = dgraph_read(
             queries.DISTANT_ANTONYMS_QUERY,
