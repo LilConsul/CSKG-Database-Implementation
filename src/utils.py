@@ -16,7 +16,7 @@ def dgraph_service(host: Optional[str] = None, port: Optional[int] = None):
         host: Dgraph Alpha host (defaults to env var DGRAPH_HOST or 'localhost')
         port: Dgraph Alpha port (defaults to env var DGRAPH_PORT or 9080)
     """
-    host = host or os.environ.get("DGRAPH_HOST", "localhost")
+    host = host or os.environ.get("DGRAPH_HOST", "dgraph_alpha")
     port = port or int(os.environ.get("DGRAPH_PORT", "9080"))
 
     client_stub = pydgraph.DgraphClientStub(f"{host}:{port}")

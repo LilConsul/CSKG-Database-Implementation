@@ -4,6 +4,8 @@ DIR="./data"
 FILE="$DIR/cskg.tsv.gz"
 RDF_FILE="$DIR/data.rdf.gz"
 STORAGE_DIR="./storage"
+SERVER_READY_MARKER="Server is ready"
+
 
 download_file() {
   echo "Downloading file..."
@@ -16,9 +18,31 @@ convert_file() {
   docker exec -it dbcli_python uv run /code/rdf_convert.py
 }
 
+delete_dir() {
+  local dir="$1"
+  if [ -d "$dir" ]; then
+    rm -rf "$dir" 2>/dev/null || {
+      echo "Failed to remove $dir with standard permissions, trying with sudo..."
+      sudo rm -rf "$dir" || echo "Warning: Failed to remove $dir, please check permissions"
+    }
+  fi
+}
+
 run() {
   echo "Starting the docker. Please wait..."
-  docker-compose up
+  docker-compose up -d
+
+  echo "Waiting for services to initialize..."
+  echo "Watching logs from alpha service until ready..."
+  docker-compose logs -f alpha | {
+    while IFS= read -r line; do
+      echo "$line"
+      if echo "$line" | grep -q "$SERVER_READY_MARKER"; then
+        break
+      fi
+    done
+  }
+  echo "Dgraph Alpha server is ready!"
 }
 
 stop() {
@@ -31,17 +55,20 @@ cleanup() {
   docker-compose down -v --remove-orphans
   docker system prune -f
   echo "Docker cleaned. Removing directories..."
-  sudo rm -rf "$STORAGE_DIR"
-  sudo rm -rf "$DIR"
-  echo "Cleanup completed successfully"
+
+  delete_dir "$STORAGE_DIR"
+  delete_dir "$DIR"
+
+  echo "Cleanup completed"
 }
 
+
 setup() {
-  local auto_confirm="$1"
+  auto_confirm="$1"
 
   if [ -d "$STORAGE_DIR" ]; then
     echo "Storage directory exists: $STORAGE_DIR"
-    echo "No need to run setup. You can try using the ./dbcli.sh run or ./dbcli.sh cleanup"
+    echo "No need to run setup. You can try using the <./dbcli.sh run> or <./dbcli.sh cleanup>"
     return
   fi
 
@@ -100,7 +127,18 @@ case "$1" in
   "stop")
     stop
     ;;
-  *)
-    docker exec -it dbcli_python uv run /code/main.py "$@"
+*) # Default case - run the python query script
+    retries=5
+    while [ $retries -gt 0 ]; do
+      if curl -s http://localhost:8080/health | grep -q "healthy"; then
+        docker exec -it dbcli_python uv run /code/main.py "$@"
+        exit 0
+      else
+        echo "Server not ready. Retrying in 5 seconds... ($retries retries left)"
+        retries=$((retries - 1))
+        sleep 5
+      fi
+    done
+    echo "Server not ready after multiple attempts. Run <$0 setup> or <$0 run> first..."
     ;;
 esac
