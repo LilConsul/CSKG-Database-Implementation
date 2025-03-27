@@ -17,7 +17,10 @@ ESCAPE_PATTERNS = [
 
 
 def sanitize_id(id_string):
-    return "".join(c if c.isascii() and (c.isalnum() or c in "_-") else "_" for c in id_string)
+    return "".join(
+        c if c.isascii() and (c.isalnum() or c in "_-") else "_" for c in id_string
+    )
+
 
 @lru_cache(maxsize=1024)
 def escape_string(s):

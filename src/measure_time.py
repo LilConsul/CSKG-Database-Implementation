@@ -10,4 +10,5 @@ def measure_time(func):
         end = time.perf_counter()
         print(f"{func.__name__} executed in {end - start:.2f} seconds")
         return result
+
     return wrapper

@@ -53,37 +53,44 @@ def dgraph_read(
         raise
 
 
-def dgraph_write(mutations, commit_now: bool = True) -> Dict[str, Any]:
+def dgraph_write(mutations: Any, commit_now: bool = True) -> Dict[str, Any]:
     """
     Execute write operations against Dgraph.
 
     Args:
-        mutations: List of mutations to apply or a string containing a mutation
+        mutations: A dictionary (JSON mutation) or a string (DQL mutation)
         commit_now: Whether to commit immediately
 
     Returns:
-        Operation results
+        Dict containing operation results
     """
     try:
         with dgraph_service() as client:
             txn = client.txn()
             try:
+                mutation_obj = pydgraph.Mutation()
+
                 if isinstance(mutations, str):
-                    # Handle string mutation (DQL format)
-                    response = txn.mutate(mutation=mutations, commit_now=commit_now)
+                    mutation_obj.set_nquads = mutations.encode("utf-8")
                 else:
-                    # Handle object mutations
-                    response = txn.mutate(set_obj=mutations, commit_now=commit_now)
+                    mutation_obj.set_json = json.dumps(mutations).encode("utf-8")
+
+                response = txn.mutate(mutation_obj, commit_now=commit_now)
 
                 if not commit_now:
                     txn.commit()
+
                 return {"uids": response.uids}
+
             except Exception:
                 txn.discard()
                 raise
+
             finally:
-                if not commit_now and txn._state == 0:  # If still open
+                if not commit_now and txn._state == 0:
                     txn.discard()
+
     except Exception as e:
-        click.echo(f"Error executing mutation: {str(e)}", err=True)
+        click.echo(f"Error executing mutation: {e}", err=True)
         raise
+

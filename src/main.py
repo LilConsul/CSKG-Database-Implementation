@@ -11,20 +11,24 @@ def cli():
     """CLI entry point for Dgraph operations."""
     pass
 
+
 @click.command()
 def setup():
     """Prepare the environment: create directories, download data, and start Docker containers."""
     pass
+
 
 @click.command()
 def cleanup():
     """Remove all containers, volumes, images, and clear data and storage directories."""
     pass
 
+
 @click.command()
 def run():
     """Start the Docker containers."""
     pass
+
 
 @click.command()
 def stop():
@@ -191,7 +195,7 @@ def count_nodes_single_neighbor():
 @click.argument("node_id", required=True)
 @click.argument("new_label", required=True)
 def rename_node(node_id, new_label):
-    """ERROR NEED TO FIX Rename a given node by updating its label."""
+    """Rename a given node by updating its label."""
     try:
         # First locate the node UID
         node_info = dgraph_read(
@@ -212,13 +216,7 @@ def rename_node(node_id, new_label):
         uid = node_info["node"][0]["uid"]
 
         # Create mutation using the node's UID
-        mutation = f"""
-        {{
-            set {{
-                <{uid}> <label> "{new_label}" .
-            }}
-        }}
-        """
+        mutation = {"set": [{"uid": uid, "label": new_label}]}
 
         # Execute the mutation
         result = dgraph_write(mutation)
