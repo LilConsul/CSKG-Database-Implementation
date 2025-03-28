@@ -1,6 +1,6 @@
 id: string @unique @index(exact) .
 label: string .
-to: [uid] @reverse .
+to: [uid] @count @reverse .
 
 type Node{
     id
