@@ -171,18 +171,33 @@ def count_nodes_no_predecessors():
 
 @click.command()
 def find_nodes_most_neighbors():
-    """ERROR NEED TO FIX Find nodes with the most neighbors."""
+    """Find nodes with the most neighbors."""
     try:
-        results = dgraph_read(queries.NODES_MOST_NEIGHBORS_QUERY)
+        # Step 1: Get the maximum neighbor count
+        max_count_results = dgraph_read(queries.MOST_NEIGHBORS_QUERY_AMOUNT)
+        max_neighbors = max_count_results.get("nodes_with_most_neighbors", [{}])[0].get("total_neighbors")
+
+        if not max_neighbors:
+            click.echo("Failed to determine maximum neighbor count", err=True)
+            exit(1)
+
+        # Print the maximum neighbor count found
+        click.echo(f"Maximum number of neighbors found: {max_neighbors}")
+
+        # Step 2: Use the max count to find nodes with that many neighbors
+        click.echo(f"Searching for all nodes with {max_neighbors} neighbors...")
+        variables = {"$max_neighbors": str(max_neighbors)}
+        results = dgraph_read(queries.NODES_MOST_NEIGHBORS_QUERY, variables=variables)
+
         click.echo(json.dumps(results, indent=2))
-    except Exception:
-        click.echo("Failed to find nodes with most neighbors", err=True)
+    except Exception as e:
+        click.echo(f"Failed to find nodes with most neighbors: {str(e)}", err=True)
         exit(1)
 
 
 @click.command()
 def count_nodes_single_neighbor():
-    """ERROR NEED TO FIX Count nodes with a single neighbor."""
+    """Count nodes with a single neighbor."""
     try:
         results = dgraph_read(queries.NODES_SINGLE_NEIGHBOR_QUERY)
         click.echo(json.dumps(results, indent=2))

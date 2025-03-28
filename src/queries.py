@@ -123,9 +123,9 @@ query countNodesWithoutPredecessors {
 }
 """
 
-# TODO: fix query
-NODES_MOST_NEIGHBORS_QUERY = """
-{
+
+MOST_NEIGHBORS_QUERY_AMOUNT = """
+query mostNeighborsAmount {
   var(func: has(id)) {
     successors_count as count(to)
     predecessors_count as count(~to)
@@ -135,26 +135,43 @@ NODES_MOST_NEIGHBORS_QUERY = """
   var(){
 		M as max(val(total_neighbors))
   }
-      
+    
   nodes_with_most_neighbors(func: uid(M)) {
-    uid
     total_neighbors: val(M)
   }
 }
 """
 
-# TODO: fix query
-NODES_SINGLE_NEIGHBOR_QUERY = """
-{
+NODES_MOST_NEIGHBORS_QUERY = """
+query nodesWithMostNeighbors($max_neighbors: int) {
   var(func: has(id)) {
     successors_count as count(to)
     predecessors_count as count(~to)
     total_neighbors as math(successors_count + predecessors_count)
   }
 
-  count(func: has(id)) @filter(eq(val(total_neighbors), 1)) {
-    count(uid)
+  max_neighbors_value(func: has(id))
+      @filter(eq(val(total_neighbors), $max_neighbors))
+      {
+        id
+        label
+      }
+}
+"""
+
+NODES_SINGLE_NEIGHBOR_QUERY = """
+query nodesWithSingleNeighbor{
+  var(func: has(id)) {
+    successors_count as count(to)
+    predecessors_count as count(~to)
+    total_neighbors as math(successors_count + predecessors_count)
   }
+
+  nodes_with_single_neighbor(func: has(id))
+      @filter(eq(val(total_neighbors), 1))
+      {
+        amount:count(uid)
+      }
 }
 """
 
