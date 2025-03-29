@@ -6,6 +6,8 @@ from typing import Any, Dict, Optional
 import click
 import pydgraph
 
+DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
+
 
 @contextmanager
 def dgraph_service(host: Optional[str] = None, port: Optional[int] = None):
@@ -49,7 +51,8 @@ def dgraph_read(
             finally:
                 txn.discard()
     except Exception as e:
-        click.echo(f"Error executing query: {str(e)}", err=True)
+        if DEBUG:
+            click.echo(f"Error executing query: {str(e)}", err=True)
         raise
 
 
@@ -91,6 +94,6 @@ def dgraph_write(mutations: Any, commit_now: bool = True) -> Dict[str, Any]:
                     txn.discard()
 
     except Exception as e:
-        click.echo(f"Error executing mutation: {e}", err=True)
+        if DEBUG:
+            click.echo(f"Error executing mutation: {e}", err=True)
         raise
-

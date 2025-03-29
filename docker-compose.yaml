@@ -48,6 +48,7 @@ services:
     environment:
       DGRAPH_HOST: "dgraph_alpha"
       DGRAPH_PORT: "9080"
+      DEBUG: "FALSE"
     stdin_open: true
     tty: true
     restart: on-failure
