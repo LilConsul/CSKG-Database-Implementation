@@ -184,11 +184,33 @@ SIMILAR_NODES_QUERY = """
 """
 
 SHORTEST_PATH_QUERY = """
+query shortestPath($id1: string, $id2: string) {
+  A as var(func: eq(id, $id1))
+  B as var(func: eq(id, $id2))
 
+  shortestPath as shortest(from: uid(A), to: uid(B)) {
+    to
+    ~to
+  }
+
+  path(func: uid(shortestPath)) {
+    id
+    label
+  }
+}
 """
 
-DISTANT_SYNONYMS_QUERY = """
-
+DISTANT_SYNONYMS_ANTONYM = """
+query disantSynonymsAndAntonyms($id: string, $distance: int) {
+  distant_nodes(func: eq(id, $id)) @recurse(depth: $distance, loop: false) {
+    id
+    label
+    synonym: to @facets(eq(id, "/r/Synonym"))
+    synonym~: ~to @facets(eq(id, "/r/Synonym"))
+    antonym: to @facets(eq(id, "/r/Antonym"))
+    antonym~: ~to @facets(eq(id, "/r/Antonym"))
+  }
+}
 """
 
 DISTANT_ANTONYMS_QUERY = """
