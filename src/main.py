@@ -3,6 +3,7 @@ import queries
 from utils import dgraph_read, dgraph_write
 from message_handler import error_print, json_print, verbose_print
 from distant_nodes import find_distant_relationships
+from collections import deque
 
 
 @click.group()
