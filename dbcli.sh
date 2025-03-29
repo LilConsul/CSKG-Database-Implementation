@@ -28,7 +28,7 @@ delete_dir() {
   fi
 }
 
-run() {
+start() {
   echo "Starting the docker. Please wait..."
   docker-compose up -d
 
@@ -68,7 +68,7 @@ setup() {
 
   if [ -d "$STORAGE_DIR" ]; then
     echo "Storage directory exists: $STORAGE_DIR"
-    echo "No need to run setup. You can try using the <./dbcli.sh run> or <./dbcli.sh cleanup>"
+    start
     return
   fi
 
@@ -104,7 +104,7 @@ setup() {
     read -r response;
     [ "$response" = "y" ];
     }; then
-    run
+    start
   fi
 }
 
@@ -115,14 +115,11 @@ if ! [ -x "$(command -v docker)" ]; then
 fi
 
 case "$1" in
-  "setup")
-    setup "$2"
-    ;;
   "cleanup")
     cleanup
     ;;
   "run")
-    run
+    setup "$2"
     ;;
   "stop")
     stop
