@@ -1,14 +1,17 @@
-import json
-import sys
 import click
 import queries
 from utils import dgraph_read, dgraph_write
+from message_handler import error_print, json_print, verbose_print
+from distant_nodes import find_distant_relationships
 
 
 @click.group()
-def cli():
+@click.option("--verbose", is_flag=True, help="Enable verbose output")
+@click.pass_context
+def cli(ctx, verbose):
     """CLI entry point for Dgraph operations."""
-    pass
+    ctx.ensure_object(dict)
+    ctx.obj["verbose"] = verbose
 
 
 @click.command()
@@ -29,20 +32,15 @@ def stop():
     pass
 
 
-def raise_error(command_name, error):
-    click.echo(f"Error during {command_name}: \n{str(error)}", err=True)
-    sys.exit(1)
-
-
 def query_one_arg(name, query, help_text, err_text):
     @click.command(name, help=help_text)
     @click.argument("node_id", required=True)
     def command(node_id):
         try:
             results = dgraph_read(query, variables={"$id": node_id})
-            click.echo(json.dumps(results, indent=2))
+            json_print(results)
         except Exception as error:
-            raise_error(err_text, error)
+            error_print(err_text, error)
 
     return command
 
@@ -52,9 +50,9 @@ def count_nodes():
     """Count how many nodes there are."""
     try:
         results = dgraph_read(queries.TOTAL_NODES_QUERY)
-        click.echo(json.dumps(results, indent=2))
+        json_print(results)
     except Exception as error:
-        raise_error("counting total nodes", error)
+        error_print("counting total nodes", error)
 
 
 @click.command()
@@ -62,9 +60,9 @@ def count_nodes_no_successors():
     """Count nodes which do not have any successors."""
     try:
         results = dgraph_read(queries.NODES_NO_SUCCESSORS_QUERY)
-        click.echo(json.dumps(results, indent=2))
+        json_print(results)
     except Exception as error:
-        raise_error("counting nodes without successors", error)
+        error_print("counting nodes without successors", error)
 
 
 @click.command()
@@ -72,9 +70,9 @@ def count_nodes_no_predecessors():
     """Count nodes which do not have any predecessors."""
     try:
         results = dgraph_read(queries.NODES_NO_PREDECESSORS_QUERY)
-        click.echo(json.dumps(results, indent=2))
+        json_print(results)
     except Exception as error:
-        raise_error("counting nodes without predecessors", error)
+        error_print("counting nodes without predecessors", error)
 
 
 @click.command()
@@ -87,20 +85,19 @@ def find_nodes_most_neighbors():
         )
 
         if not max_neighbors:
-            click.echo("Failed to determine maximum neighbor count", err=True)
-            sys.exit(1)
+            error_print("determining maximum neighbor count", None)
 
-        click.echo(f"Maximum number of neighbors found: {max_neighbors}")
-        click.echo(f"Searching for all nodes with {max_neighbors} neighbors...")
+        verbose_print(f"Maximum number of neighbors found: {max_neighbors}")
+        verbose_print(f"Searching for all nodes with {max_neighbors} neighbors...")
 
         results = dgraph_read(
             queries.NODES_MOST_NEIGHBORS_QUERY,
             variables={"$max_neighbors": str(max_neighbors)},
         )
-        click.echo(json.dumps(results, indent=2))
+        json_print(results)
 
     except Exception as error:
-        raise_error("finding nodes with most neighbors", error)
+        error_print("finding nodes with most neighbors", error)
 
 
 @click.command()
@@ -108,9 +105,9 @@ def count_nodes_single_neighbor():
     """Count nodes with a single neighbor."""
     try:
         results = dgraph_read(queries.NODES_SINGLE_NEIGHBOR_QUERY)
-        click.echo(json.dumps(results, indent=2))
+        json_print(results)
     except Exception as error:
-        raise_error("counting nodes with a single neighbor", error)
+        error_print("counting nodes with a single neighbor", error)
 
 
 @click.command()
@@ -131,71 +128,58 @@ def rename_node(node_id, new_label):
         )
 
         if not node_info.get("node"):
-            click.echo(f"Node with ID {node_id} not found", err=True)
-            exit(1)
+            error_print(f"Node with ID {node_id} not found", None)
+            return
 
         uid = node_info["node"][0]["uid"]
         mutation = {"set": [{"uid": uid, "label": new_label}]}
-        result = dgraph_write(mutation)
-        click.echo(f"Successfully renamed node {node_id} to '{new_label}'")
+        dgraph_write(mutation)
+        verbose_print(f"Successfully renamed node {node_id} to '{new_label}'")
 
     except Exception as error:
-        raise_error("renaming node", error)
+        error_print("renaming node", error)
 
 
 @click.command()
 @click.argument("node_id", required=True)
 def find_similar_nodes(node_id):
-    """ERROR NEED TO FIX Find all 'similar' nodes that share common parents or children via the same edge type."""
+    """Find all 'similar' nodes that share common parents or children via the same edge type."""
     try:
         results = dgraph_read(queries.SIMILAR_NODES_QUERY, variables={"$id": node_id})
-        click.echo(json.dumps(results, indent=2))
+        json_print(results)
     except Exception as error:
-        raise_error(f"finding similar nodes for {node_id}", error)
+        error_print(f"finding similar nodes for {node_id}", error)
 
 
 @click.command()
 @click.argument("node_id1", required=True)
 @click.argument("node_id2", required=True)
 def find_shortest_path(node_id1, node_id2):
-    """ERROR NEED TO FIX Find the shortest path between two nodes, ignoring edge direction."""
+    """Find the shortest path between two nodes, ignoring edge direction."""
     try:
         results = dgraph_read(
-            queries.SHORTEST_PATH_QUERY, variables={"$id1": node_id1, "$id2": node_id2}
+            queries.SHORTEST_PATH_QUERY,
+            variables={"$id1": str(node_id1), "$id2": str(node_id2)},
         )
-        click.echo(json.dumps(results, indent=2))
+        json_print(results)
     except Exception as error:
-        raise_error(f"finding path between {node_id1} and {node_id2}", error)
+        error_print(f"finding path between {node_id1} and {node_id2}", error)
 
 
 @click.command()
 @click.argument("node_id", required=True)
 @click.argument("distance", type=int, required=True)
 def find_distant_synonyms(node_id, distance):
-    """ERROR NEED TO FIX Find all distant synonyms at a specified path distance."""
-    try:
-        results = dgraph_read(
-            queries.DISTANT_SYNONYMS_QUERY,
-            variables={"$id": node_id, "$distance": distance},
-        )
-        click.echo(json.dumps(results, indent=2))
-    except Exception as error:
-        raise_error(f"finding distant synonyms for {node_id}", error)
+    """Find all distant synonyms at a specified path distance."""
+    return find_distant_relationships(node_id, distance, want_synonyms=True)
 
 
 @click.command()
 @click.argument("node_id", required=True)
 @click.argument("distance", type=int, required=True)
 def find_distant_antonyms(node_id, distance):
-    """ERROR NEED TO FIX Find all distant antonyms at a specified path distance."""
-    try:
-        results = dgraph_read(
-            queries.DISTANT_ANTONYMS_QUERY,
-            variables={"$id": node_id, "$distance": distance},
-        )
-        click.echo(json.dumps(results, indent=2))
-    except Exception as error:
-        raise_error(f"finding distant antonyms for {node_id}", error)
+    """Find all distant antonyms at a specified path distance."""
+    return find_distant_relationships(node_id, distance, want_synonyms=False)
 
 
 # Add all commands to the CLI group
