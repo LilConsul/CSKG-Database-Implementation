@@ -272,16 +272,59 @@ query nodesWithMostNeighbors($max_neighbors: int) {
    - Deployment instructions
 
 ## 🧪 Testing
+> [!NOTE]  
+> All testing was performed on a mid-range PC with the following specifications:
+> - CPU: Intel Core i5-14400F
+> - GPU: NVIDIA RTX 3060 12GB
+> - Storage: Samsung M.2 NVME 980
+> - RAM: 16GB DDR4 @ 3600MHz
+### RDF Converter Optimization
 
-### Performance Testing
-- TO BE IMPLEMENTED
+The Python RDF converter underwent several optimization iterations, resulting in a 33.3% improvement in execution time from the initial implementation. Below is a breakdown of each optimization step and its impact:
+
+<img src="img/rdf_convertor_optimization.svg" alt="Convertor Optimization Diagram" style="width:100%; height:auto;" />
+
+| Optimization Step | Execution Time | Improvement | Description |
+|-------------------|---------------|-------------|-------------|
+| Basic Implementation | 72 sec | Baseline    | Original implementation using standard Python libraries |
+| ID Sanitizer without Regex | 70 sec | 2.8%        | Replaced regex-based ID sanitization with direct string operations |
+| Escape String Caching | 69 sec | 4.1%        | Implemented caching mechanism for repeated string escape operations |
+| Precompiled Regex Patterns | 62 sec | 13.9%       | Used precompiled regex patterns for escape_string function |
+| Batch Processing Approach | 48 sec | 33.3%       | Redesigned batch processing algorithm for more efficient memory usage |
+
+
+### Database Loading Optimization
+
+We achieved dramatic improvements in database loading times through several optimization techniques:
+
+<img src="img/loader_optimization.svg" alt="Loading Optimization Diagram" style="width:100%; height:auto;" />
+
+| Optimization Step | Loading Time | Improvement | Description |
+|-------------------|--------------|-------------|-------------|
+| Basic Loading | 43 mins | Baseline    | Initial implementation using default settings and raw RDF files |
+| Reduced Properties | 36 mins | 16.3%       | Eliminated redundant properties from the dataset |
+| RDF.GZ Compression | 28 mins | 34.9%       | Used compressed RDF.GZ format instead of raw RDF |
+| Dgraph Bulk Loader | 4.46 mins | 89.6%       | Switched from Dgraph Live Loader to Bulk Loader |
+
+#### Loading Optimization Strategies
+
+1. **Data Preprocessing**: Analyzing and removing redundant properties significantly reduced the data volume while preserving all necessary information. It was identified that storing node types of information is not necessary for current use case, as the data is already structured in a graph format. 
+
+2. **Compression Benefits**: Using the .rdf.gz format  not only reduced storage requirements but also decreased I/O overhead during loading, leading to faster processing times.
+
+3. **Bulk vs. Live Loading**: The most dramatic improvement came from switching from Dgraph's Live Loader to the Bulk Loader:
+   - Live Loader: Processes data in a transactional manner, with built-in consistency checks
+   - Bulk Loader: Bypasses transaction processing, generating and loading SSTable files directly
+   
+   While the Bulk Loader requires a database restart, the 89.6% total reduction in loading time justified this trade-off for initial data loading scenario.
+
 
 ## 👥 Team Contributions
 • **Shevchenko Denys**:
   - Infrastructure & DevOps:
     - Docker configuration and optimization
     - Shell script automation and dbcli.sh
-  - Performance Testing & Optimization :
+  - Performance Testing & Optimization:
     - Bulk data import
     - Query execution optimization
     - Data conversion optimization 
