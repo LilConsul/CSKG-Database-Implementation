@@ -1,5 +1,5 @@
 import json
-from collections import deque
+import time
 
 import click
 
@@ -144,7 +144,6 @@ def rename_node(node_id, new_label):
         error_print("renaming node", error)
 
 
-
 @click.command()
 @click.option(
     "--batch-size",
@@ -155,6 +154,7 @@ def rename_node(node_id, new_label):
 def find_similar_nodes(batch_size):
     """Find all 'similar' nodes that share common parents or children via the same edge type."""
     try:
+        process_start = time.time()
         processed_nodes = set()
         similar_pairs = set()
         offset = 0
@@ -168,7 +168,6 @@ def find_similar_nodes(batch_size):
                 queries.SIMILAR_NODES_QUERY,
                 variables={"$first": str(batch_size), "$offset": str(offset)},
             )
-
             nodes = results.get("nodes", [])
             if not nodes:
                 break
@@ -185,26 +184,17 @@ def find_similar_nodes(batch_size):
                 for successor in node.get("to", []):
                     successor_id = successor.get("id")
                     edge_type_to_successor = successor.get("to|id")
-                    if successor_id in processed_nodes:
+                    if successor_id == node_id:
                         continue
-
-                    # Check successor's successors (2nd level)
-                    for sub_successor in successor.get("to", []):
-                        sub_successor_id = sub_successor.get("id")
-                        edge_type_sub = sub_successor.get("to|id")
-                        if sub_successor_id in processed_nodes or sub_successor_id == node_id:
-                            continue
-
-                        # Find if original node connects to this sub_successor with same edge type
-                        if edge_type_to_successor == edge_type_sub:
-                            node1, node2 = sorted([node_id, sub_successor_id])
-                            similar_pairs.add((node1, node2))
 
                     # Check successor's predecessors (2nd level)
                     for sub_predecessor in successor.get("~to", []):
                         sub_predecessor_id = sub_predecessor.get("id")
                         edge_type_sub = sub_predecessor.get("~to|id")
-                        if sub_predecessor_id in processed_nodes or sub_predecessor_id == node_id:
+                        if (
+                            sub_predecessor_id in processed_nodes
+                            or sub_predecessor_id == node_id
+                        ):
                             continue
 
                         # Find if original node has connection from this sub_predecessor with same edge type
@@ -216,34 +206,22 @@ def find_similar_nodes(batch_size):
                 for predecessor in node.get("~to", []):
                     predecessor_id = predecessor.get("id")
                     edge_type_from_predecessor = predecessor.get("~to|id")
-                    if predecessor_id in processed_nodes:
+                    if predecessor_id == node_id:
                         continue
 
                     # Check predecessor's successors (2nd level)
                     for sub_successor in predecessor.get("to", []):
                         sub_successor_id = sub_successor.get("id")
                         edge_type_sub = sub_successor.get("to|id")
-                        if sub_successor_id in processed_nodes or sub_successor_id == node_id:
+                        if (
+                            sub_successor_id in processed_nodes
+                            or sub_successor_id == node_id
+                        ):
                             continue
 
                         # Find if original node connects to this sub_successor with same edge type
                         if edge_type_from_predecessor == edge_type_sub:
                             node1, node2 = sorted([node_id, sub_successor_id])
-                            similar_pairs.add((node1, node2))
-
-                    # Check predecessor's predecessors (2nd level)
-                    for sub_predecessor in predecessor.get("~to", []):
-                        sub_predecessor_id = sub_predecessor.get("id")
-                        edge_type_sub = sub_predecessor.get("~to|id")
-                        if (
-                            sub_predecessor_id in processed_nodes
-                            or sub_predecessor_id == node_id
-                        ):
-                            continue
-
-                        # Find if original node has connection from this sub_predecessor with same edge type
-                        if edge_type_from_predecessor == edge_type_sub:
-                            node1, node2 = sorted([node_id, sub_predecessor_id])
                             similar_pairs.add((node1, node2))
 
                 processed_nodes.add(node_id)
@@ -260,8 +238,9 @@ def find_similar_nodes(batch_size):
                 # Convert to list for JSON serialization
                 serializable_pairs = [list(pair) for pair in similar_pairs]
 
-                with open(output_file, "w") as f:
-                    json.dump(serializable_pairs, f, indent=2)
+                with open(output_file, "a") as f:
+                    for pair in serializable_pairs:
+                        f.write(json.dumps(pair) + "\n")
 
                 # Clear memory if too many pairs
                 if len(similar_pairs) > 1000000:
@@ -273,8 +252,12 @@ def find_similar_nodes(batch_size):
         # Save final results
         serializable_pairs = [list(pair) for pair in similar_pairs]
 
-        with open(output_file, "w") as f:
-            json.dump(serializable_pairs, f, indent=2)
+        with open(output_file, "a") as f:
+            for pair in serializable_pairs:
+                f.write(json.dumps(pair) + "\n")
+
+        process_time = time.time() - process_start
+        click.echo(f"Batch processing time: {process_time:.3f} seconds")
 
         click.echo(f"Completed: processed {len(processed_nodes)} nodes")
         click.echo(f"Found {len(similar_pairs)} similar node pairs")

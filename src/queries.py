@@ -180,9 +180,6 @@ query findSimilarNodesData($first: int, $offset: int) {
     id
     to @facets(id) {
       id
-      to @facets(id) {
-      	id
-    }
     ~to @facets(id) {
       id
     	}
@@ -191,9 +188,6 @@ query findSimilarNodesData($first: int, $offset: int) {
       id
       to @facets(id) {
      	 id
-    	}
-    	~to @facets(id) {
-      	id
     	}
     }
   }
