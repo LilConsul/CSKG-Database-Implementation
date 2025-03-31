@@ -272,12 +272,14 @@ query nodesWithMostNeighbors($max_neighbors: int) {
    - Deployment instructions
 
 ## 🧪 Testing
-> [!note] 
-> All testing was performed on the PC with the following specifications:
+
+> **Note:** All testing was performed on the PC with the following specifications:
 > - CPU: Intel Core i5-14400F
 > - GPU: NVIDIA RTX 3060 12GB
-> - Storage: Samsung M.2 NVME 980
 > - RAM: 16GB DDR4 @ 3600MHz
+> - SSD: Samsung M.2 NVME 980
+
+
 ### RDF Converter Optimization
 
 The Python RDF converter underwent several optimization iterations, resulting in a 33.3% improvement in execution time from the initial implementation. Below is a breakdown of each optimization step and its impact:
@@ -320,7 +322,7 @@ We achieved dramatic improvements in database loading times through several opti
 
 
 ## 👥 Team Contributions
-• **Shevchenko Denys**:
+**Shevchenko Denys**:
   - Infrastructure & DevOps:
     - Docker configuration and optimization
     - Shell script automation and dbcli.sh
@@ -332,7 +334,7 @@ We achieved dramatic improvements in database loading times through several opti
     - Distant synonyms/antonyms analysis
     - Pathfinding query
 
-• **Karabanov Yehor**:
+**Karabanov Yehor**:
   - Database Schema Architecture:
     - Graph data model design
     - Index optimization
