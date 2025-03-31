@@ -2,6 +2,7 @@
 !data/*.txt
 data/*.*
 storage/
+src/*.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
