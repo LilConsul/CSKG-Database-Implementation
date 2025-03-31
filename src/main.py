@@ -185,7 +185,7 @@ def find_similar_nodes(batch_size):
                 for successor in node.get("to", []):
                     successor_id = successor.get("id")
                     edge_type_to_successor = successor.get("to|id")
-                    if successor_id in processed_nodes or successor_id == node_id:
+                    if successor_id in processed_nodes:
                         continue
 
                     # Check successor's successors (2nd level)
@@ -240,7 +240,7 @@ def find_similar_nodes(batch_size):
                 for predecessor in node.get("~to", []):
                     predecessor_id = predecessor.get("id")
                     edge_type_from_predecessor = predecessor.get("~to|id")
-                    if predecessor_id in processed_nodes or predecessor_id == node_id:
+                    if predecessor_id in processed_nodes:
                         continue
 
                     # Check predecessor's successors (2nd level)
