@@ -272,8 +272,8 @@ query nodesWithMostNeighbors($max_neighbors: int) {
    - Deployment instructions
 
 ## 🧪 Testing
-> [!NOTE]  
-> All testing was performed on a mid-range PC with the following specifications:
+> [!note] 
+> All testing was performed on the PC with the following specifications:
 > - CPU: Intel Core i5-14400F
 > - GPU: NVIDIA RTX 3060 12GB
 > - Storage: Samsung M.2 NVME 980
