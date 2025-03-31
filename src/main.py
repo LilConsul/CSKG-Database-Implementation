@@ -156,7 +156,7 @@ def find_similar_nodes(batch_size):
     """Find all 'similar' nodes that share common parents or children via the same edge type."""
     try:
         processed_nodes = set()
-        similar_pairs = {}
+        similar_pairs = set()
         offset = 0
         output_file = "similar_nodes.json"
 
@@ -198,19 +198,7 @@ def find_similar_nodes(batch_size):
                         # Find if original node connects to this sub_successor with same edge type
                         if edge_type_to_successor == edge_type_sub:
                             node1, node2 = sorted([node_id, sub_successor_id])
-                            pair = (node1, node2)
-
-                            if pair not in similar_pairs:
-                                similar_pairs[pair] = []
-
-                            similarity = {
-                                "via_node": successor_id,
-                                "edge_type": edge_type_sub,
-                                "relation": "common_parent",
-                            }
-
-                            if similarity not in similar_pairs[pair]:
-                                similar_pairs[pair].append(similarity)
+                            similar_pairs.add((node1, node2))
 
                     # Check successor's predecessors (2nd level)
                     for sub_predecessor in successor.get("~to", []):
@@ -222,19 +210,7 @@ def find_similar_nodes(batch_size):
                         # Find if original node has connection from this sub_predecessor with same edge type
                         if edge_type_to_successor == edge_type_sub:
                             node1, node2 = sorted([node_id, sub_predecessor_id])
-                            pair = (node1, node2)
-
-                            if pair not in similar_pairs:
-                                similar_pairs[pair] = []
-
-                            similarity = {
-                                "via_node": successor_id,
-                                "edge_type": edge_type_sub,
-                                "relation": "common_child",
-                            }
-
-                            if similarity not in similar_pairs[pair]:
-                                similar_pairs[pair].append(similarity)
+                            similar_pairs.add((node1, node2))
 
                 # Process each predecessor and its connections
                 for predecessor in node.get("~to", []):
@@ -253,43 +229,22 @@ def find_similar_nodes(batch_size):
                         # Find if original node connects to this sub_successor with same edge type
                         if edge_type_from_predecessor == edge_type_sub:
                             node1, node2 = sorted([node_id, sub_successor_id])
-                            pair = (node1, node2)
-
-                            if pair not in similar_pairs:
-                                similar_pairs[pair] = []
-
-                            similarity = {
-                                "via_node": predecessor_id,
-                                "edge_type": edge_type_sub,
-                                "relation": "common_child",
-                            }
-
-                            if similarity not in similar_pairs[pair]:
-                                similar_pairs[pair].append(similarity)
+                            similar_pairs.add((node1, node2))
 
                     # Check predecessor's predecessors (2nd level)
                     for sub_predecessor in predecessor.get("~to", []):
                         sub_predecessor_id = sub_predecessor.get("id")
                         edge_type_sub = sub_predecessor.get("~to|id")
-                        if sub_predecessor_id in processed_nodes or sub_predecessor_id == node_id:
+                        if (
+                            sub_predecessor_id in processed_nodes
+                            or sub_predecessor_id == node_id
+                        ):
                             continue
 
                         # Find if original node has connection from this sub_predecessor with same edge type
                         if edge_type_from_predecessor == edge_type_sub:
                             node1, node2 = sorted([node_id, sub_predecessor_id])
-                            pair = (node1, node2)
-
-                            if pair not in similar_pairs:
-                                similar_pairs[pair] = []
-
-                            similarity = {
-                                "via_node": sub_predecessor_id,
-                                "edge_type": edge_type_sub,
-                                "relation": "common_parent",
-                            }
-
-                            if similarity not in similar_pairs[pair]:
-                                similar_pairs[pair].append(similarity)
+                            similar_pairs.add((node1, node2))
 
                 processed_nodes.add(node_id)
 
@@ -302,11 +257,8 @@ def find_similar_nodes(batch_size):
                     f"Progress: processed {len(processed_nodes)} nodes, found {len(similar_pairs)} similar pairs"
                 )
 
-                # Convert tuple keys to strings for JSON serialization
-                serializable_pairs = {
-                    f"{node1},{node2}": similarities
-                    for (node1, node2), similarities in similar_pairs.items()
-                }
+                # Convert to list for JSON serialization
+                serializable_pairs = [list(pair) for pair in similar_pairs]
 
                 with open(output_file, "w") as f:
                     json.dump(serializable_pairs, f, indent=2)
@@ -316,13 +268,10 @@ def find_similar_nodes(batch_size):
                     click.echo(
                         "Memory usage high, saving and clearing similar pairs..."
                     )
-                    similar_pairs = {}
+                    similar_pairs = set()
 
         # Save final results
-        serializable_pairs = {
-            f"{node1},{node2}": similarities
-            for (node1, node2), similarities in similar_pairs.items()
-        }
+        serializable_pairs = [list(pair) for pair in similar_pairs]
 
         with open(output_file, "w") as f:
             json.dump(serializable_pairs, f, indent=2)
