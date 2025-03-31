@@ -136,6 +136,6 @@ case "$1" in
         sleep 5
       fi
     done
-    echo "Server not ready after multiple attempts. Run <$0 setup> or <$0 run> first..."
+    echo "Server not ready after multiple attempts. Try running <$0 run> first..."
     ;;
 esac

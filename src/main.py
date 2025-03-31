@@ -322,7 +322,7 @@ cli.add_command(stop)
 
 cli.add_command(
     query_one_arg(
-        name="find_successors",
+        name="find-successors",
         query=queries.SUCCESSORS_QUERY,
         help_text="Find all successors of a given node.",
         err_text="Failed to find successors for node",
@@ -331,7 +331,7 @@ cli.add_command(
 
 cli.add_command(
     query_one_arg(
-        name="count_successors",
+        name="count-successors",
         query=queries.COUNT_SUCCESSORS_QUERY,
         help_text="Count all successors of a given node.",
         err_text="Failed to count successors for node",
@@ -340,7 +340,7 @@ cli.add_command(
 
 cli.add_command(
     query_one_arg(
-        name="find_predecessors",
+        name="find-predecessors",
         query=queries.PREDECESSORS_QUERY,
         help_text="Find all predecessors of a given node.",
         err_text="Failed to find predecessors for node",
@@ -349,7 +349,7 @@ cli.add_command(
 
 cli.add_command(
     query_one_arg(
-        name="count_predecessors",
+        name="count-predecessors",
         query=queries.COUNT_PREDECESSORS_QUERY,
         help_text="Count all predecessors of a given node.",
         err_text="Failed to count predecessors for node",
@@ -358,7 +358,7 @@ cli.add_command(
 
 cli.add_command(
     query_one_arg(
-        name="find_neighbors",
+        name="find-neighbors",
         query=queries.NEIGHBORS_QUERY,
         help_text="Find all neighbors of a given node.",
         err_text="Failed to find neighbors for node",
@@ -367,7 +367,7 @@ cli.add_command(
 
 cli.add_command(
     query_one_arg(
-        name="count_neighbors",
+        name="count-neighbors",
         query=queries.COUNT_NEIGHBORS_QUERY,
         help_text="Count all neighbors of a given node.",
         err_text="Failed to count neighbors for node",
@@ -376,7 +376,7 @@ cli.add_command(
 
 cli.add_command(
     query_one_arg(
-        name="find_grandchildren",
+        name="find-grandchildren",
         query=queries.GRANDCHILDREN_QUERY,
         help_text="Find all grandchildren (successors of successors) of a given node.",
         err_text="Failed to find grandchildren for node",
@@ -385,7 +385,7 @@ cli.add_command(
 
 cli.add_command(
     query_one_arg(
-        name="find_grandparents",
+        name="find-grandparents",
         query=queries.GRANDPARENTS_QUERY,
         help_text="Find all grandparents (predecessors of predecessors) of a given node.",
         err_text="Failed to find grandparents for node",
