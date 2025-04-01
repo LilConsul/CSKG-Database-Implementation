@@ -31,7 +31,7 @@ extract_time() {
 run_no_arg_command() {
     cmd=$1
     echo "Running $cmd..."
-    output=$(./dbcli.sh $cmd --verbose 2>&1)
+    output=$(./dbcli.sh --verbose $cmd 2>&1)
     extract_time "$cmd" "$output"
 }
 
@@ -40,7 +40,7 @@ run_one_arg_command() {
     cmd=$1
     node_id=$2
     echo "Running $cmd for node $node_id..."
-    output=$(./dbcli.sh $cmd --verbose "$node_id" 2>&1)
+    output=$(./dbcli.sh --verbose $cmd "$node_id" 2>&1)
     extract_time "$cmd $node_id" "$output"
 }
 
@@ -50,7 +50,7 @@ run_two_arg_command() {
     arg1=$2
     arg2=$3
     echo "Running $cmd with args $arg1 $arg2..."
-    output=$(./dbcli.sh $cmd --verbose "$arg1" "$arg2" 2>&1)
+    output=$(./dbcli.sh --verbose $cmd "$arg1" "$arg2" 2>&1)
     extract_time "$cmd $arg1 $arg2" "$output"
 }
 
