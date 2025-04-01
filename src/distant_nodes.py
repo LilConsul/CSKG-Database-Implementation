@@ -154,8 +154,8 @@ def find_distant_relationships(node_id, distance, want_synonyms=True):
         # Output results
         verbose_print(f"Found {len(filtered_results)} distant {relationship_type}")
         result = {f"distant_{relationship_type}": filtered_results}
-        json_print(result)
         end_time = time.time()
+        json_print(result)
         verbose_print(f"Query executed in {end_time - start_time:.2f} seconds")
 
     except Exception as error:

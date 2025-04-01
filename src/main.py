@@ -6,6 +6,7 @@ import queries
 from distant_nodes import find_distant_relationships
 from message_handler import error_print, json_print, verbose_print
 from utils import dgraph_read, dgraph_write
+from similar_nodes import get_similar_nodes
 
 
 @click.group()
@@ -42,8 +43,8 @@ def query_one_arg(name, query, help_text, err_text):
         try:
             time_start = time.time()
             results = dgraph_read(query, variables={"$id": node_id})
-            json_print(results)
             time_end = time.time()
+            json_print(results)
             verbose_print(f"Query executed in {time_end - time_start:.2f} seconds")
         except Exception as error:
             error_print(err_text, error)
@@ -57,8 +58,8 @@ def query_no_arg(name, query, help_text, err_text):
         try:
             time_start = time.time()
             results = dgraph_read(query)
-            json_print(results)
             time_end = time.time()
+            json_print(results)
             verbose_print(f"Query executed in {time_end - time_start:.2f} seconds")
         except Exception as error:
             error_print(err_text, error)
@@ -86,8 +87,8 @@ def find_nodes_most_neighbors():
             queries.NODES_MOST_NEIGHBORS_QUERY,
             variables={"$max_neighbors": str(max_neighbors)},
         )
-        json_print(results)
         time_end = time.time()
+        json_print(results)
         verbose_print(f"Query executed in {time_end - time_start:.2f} seconds")
 
     except Exception as error:
@@ -119,8 +120,8 @@ def rename_node(node_id, new_label):
         uid = node_info["node"][0]["uid"]
         mutation = {"set": [{"uid": uid, "label": new_label}]}
         dgraph_write(mutation)
-        json_print(f"Successfully renamed node {node_id} to '{new_label}'")
         end_time = time.time()
+        json_print(f"Successfully renamed node {node_id} to '{new_label}'")
         verbose_print(f"Query executed in {end_time - start_time:.2f} seconds")
 
     except Exception as error:
@@ -131,91 +132,7 @@ def rename_node(node_id, new_label):
 @click.argument("node_id", required=True)
 def find_similar_nodes(node_id):
     """Find all 'similar' nodes that share common parents or children via the same edge type."""
-    try:
-        start_time = time.time()
-        similar_nodes = {}
-
-        # Fetch node data
-        results = dgraph_read(
-            queries.SIMILAR_NODES_QUERY,
-            variables={"$id": node_id},
-        )
-        nodes = results.get("node_info", [])
-        if not nodes:
-            click.echo(f"No nodes found for ID {node_id}")
-            return
-
-        node = nodes[0]
-        node_id = node.get("id")
-
-        # Process each successor and its connections
-        for successor in node.get("to", []):
-            successor_id = successor.get("id")
-            edge_type_to_successor = successor.get("to|id")
-
-            if successor_id == node_id:
-                continue
-
-            # Check successor's predecessors (2nd level)
-            for sub_predecessor in successor.get("~to", []):
-                sub_predecessor_id = sub_predecessor.get("id")
-                edge_type_sub = sub_predecessor.get("~to|id")
-
-                if (
-                    sub_predecessor_id != node_id
-                    and edge_type_to_successor == edge_type_sub
-                ):
-                    similar_nodes.setdefault(
-                        sub_predecessor_id,
-                        {
-                            "id": sub_predecessor_id,
-                            "label": sub_predecessor.get("label"),
-                            "shared_connections": [],
-                        },
-                    )
-                    similar_nodes[sub_predecessor_id]["shared_connections"].append(
-                        {"via_node": successor_id, "edge_type": edge_type_to_successor}
-                    )
-
-        # Process each predecessor and its connections
-        for predecessor in node.get("~to", []):
-            predecessor_id = predecessor.get("id")
-            edge_type_from_predecessor = predecessor.get("~to|id")
-
-            if predecessor_id == node_id:
-                continue
-
-            # Check predecessor's successors (2nd level)
-            for sub_successor in predecessor.get("to", []):
-                sub_successor_id = sub_successor.get("id")
-                edge_type_sub = sub_successor.get("to|id")
-
-                if (
-                    sub_successor_id != node_id
-                    and edge_type_from_predecessor == edge_type_sub
-                ):
-                    similar_nodes.setdefault(
-                        sub_successor_id,
-                        {
-                            "id": sub_successor_id,
-                            "label": sub_successor.get("label"),
-                            "shared_connections": [],
-                        },
-                    )
-                    similar_nodes[sub_successor_id]["shared_connections"].append(
-                        {
-                            "via_node": predecessor_id,
-                            "edge_type": edge_type_from_predecessor,
-                        }
-                    )
-
-        result = {"similar_nodes": list(similar_nodes.values())}
-        json_print(result)
-        end_time = time.time()
-        verbose_print(f"Query executed in {end_time - start_time:.2f} seconds")
-
-    except Exception as error:
-        error_print("finding similar nodes", error)
+    return get_similar_nodes(node_id)
 
 
 @click.command()
@@ -229,8 +146,8 @@ def find_shortest_path(node_id1, node_id2):
             queries.SHORTEST_PATH_QUERY,
             variables={"$id1": str(node_id1), "$id2": str(node_id2)},
         )
-        json_print(results)
         end_time = time.time()
+        json_print(results)
         verbose_print(f"Query executed in {end_time - start_time:.2f} seconds")
     except Exception as error:
         error_print(f"finding path between {node_id1} and {node_id2}", error)
