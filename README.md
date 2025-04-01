@@ -228,6 +228,17 @@ System can find all simillar nodes, that share the same parent or child with the
 }
 ```
 
+### Displaying Time Measurements
+Add the `--verbose` or flag to any command to display detailed execution time measurements:
+```bash
+./dbcli.sh count-predecessors --verbose /c/en/happy 
+```
+```
+`query output`
+Query executed in 0.34 seconds
+```
+
+
 ## 🔍 Query Examples
 
 
