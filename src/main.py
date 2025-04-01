@@ -169,6 +169,9 @@ def find_similar_nodes(node_id):
             successor_id = successor.get("id")
             edge_type_to_successor = successor.get("to|id")
 
+            if successor_id == node_id:
+                continue
+
             # Check successor's predecessors (2nd level)
             for sub_predecessor in successor.get("~to", []):
                 sub_predecessor_id = sub_predecessor.get("id")
@@ -194,6 +197,9 @@ def find_similar_nodes(node_id):
         for predecessor in node.get("~to", []):
             predecessor_id = predecessor.get("id")
             edge_type_from_predecessor = predecessor.get("~to|id")
+
+            if predecessor_id == node_id:
+                continue
 
             # Check predecessor's successors (2nd level)
             for sub_successor in predecessor.get("to", []):
