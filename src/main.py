@@ -51,34 +51,19 @@ def query_one_arg(name, query, help_text, err_text):
     return command
 
 
-@click.command()
-def count_nodes():
-    """Count how many nodes there are."""
-    try:
-        results = dgraph_read(queries.TOTAL_NODES_QUERY)
-        json_print(results)
-    except Exception as error:
-        error_print("counting total nodes", error)
+def query_no_arg(name, query, help_text, err_text):
+    @click.command(name, help=help_text)
+    def command():
+        try:
+            time_start = time.time()
+            results = dgraph_read(query)
+            json_print(results)
+            time_end = time.time()
+            verbose_print(f"Query executed in {time_end - time_start:.2f} seconds")
+        except Exception as error:
+            error_print(err_text, error)
 
-
-@click.command()
-def count_nodes_no_successors():
-    """Count nodes which do not have any successors."""
-    try:
-        results = dgraph_read(queries.NODES_NO_SUCCESSORS_QUERY)
-        json_print(results)
-    except Exception as error:
-        error_print("counting nodes without successors", error)
-
-
-@click.command()
-def count_nodes_no_predecessors():
-    """Count nodes which do not have any predecessors."""
-    try:
-        results = dgraph_read(queries.NODES_NO_PREDECESSORS_QUERY)
-        json_print(results)
-    except Exception as error:
-        error_print("counting nodes without predecessors", error)
+    return command
 
 
 @click.command()
@@ -104,16 +89,6 @@ def find_nodes_most_neighbors():
 
     except Exception as error:
         error_print("finding nodes with most neighbors", error)
-
-
-@click.command()
-def count_nodes_single_neighbor():
-    """Count nodes with a single neighbor."""
-    try:
-        results = dgraph_read(queries.NODES_SINGLE_NEIGHBOR_QUERY)
-        json_print(results)
-    except Exception as error:
-        error_print("counting nodes with a single neighbor", error)
 
 
 @click.command()
@@ -342,11 +317,44 @@ cli.add_command(
     )
 )
 
-cli.add_command(count_nodes)
-cli.add_command(count_nodes_no_successors)
-cli.add_command(count_nodes_no_predecessors)
+# Replace these individual commands with query_no_arg calls
+cli.add_command(
+    query_no_arg(
+        name="count-nodes",
+        query=queries.TOTAL_NODES_QUERY,
+        help_text="Count how many nodes there are.",
+        err_text="counting total nodes",
+    )
+)
+
+cli.add_command(
+    query_no_arg(
+        name="count-nodes-no-successors",
+        query=queries.NODES_NO_SUCCESSORS_QUERY,
+        help_text="Count nodes which do not have any successors.",
+        err_text="counting nodes without successors",
+    )
+)
+
+cli.add_command(
+    query_no_arg(
+        name="count-nodes-no-predecessors",
+        query=queries.NODES_NO_PREDECESSORS_QUERY,
+        help_text="Count nodes which do not have any predecessors.",
+        err_text="counting nodes without predecessors",
+    )
+)
+
+cli.add_command(
+    query_no_arg(
+        name="count-nodes-single-neighbor",
+        query=queries.NODES_SINGLE_NEIGHBOR_QUERY,
+        help_text="Count nodes with a single neighbor.",
+        err_text="counting nodes with a single neighbor",
+    )
+)
+
 cli.add_command(find_nodes_most_neighbors)
-cli.add_command(count_nodes_single_neighbor)
 cli.add_command(rename_node)
 cli.add_command(find_similar_nodes)
 cli.add_command(find_shortest_path)
