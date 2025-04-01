@@ -175,10 +175,57 @@ The system can find synonyms and antonyms that are multiple relationship hops aw
 ### Searching for Simillar Nodes
 System can find all simillar nodes, that share the same parent or child with the same edge id.
 ```bash
-TO BE IMPLEMENTED
+./dbcli.sh find-similar-nodes /c/en/0
 ```
-```
-EXAMPLE OUTPUT
+```json
+{
+  "similar_nodes": [
+    {
+      "id": "/c/en/zero",
+      "label": "zero",
+      "shared_connections": [
+        {
+          "via_node": "/c/en/empty_set",
+          "edge_type": "/r/DefinedAs"
+        },
+        {
+          "via_node": "/c/en/set_containing_one_element",
+          "edge_type": "/r/IsA"
+        }
+      ]
+    },
+    {
+      "id": "/c/en/addy/n",
+      "label": "addy",
+      "shared_connections": [
+        {
+          "via_node": "/c/en/internet_slang",
+          "edge_type": "/r/HasContext"
+        }
+      ]
+    },
+    {
+      "id": "/c/en/afaic",
+      "label": "afaic",
+      "shared_connections": [
+        {
+          "via_node": "/c/en/internet_slang",
+          "edge_type": "/r/HasContext"
+        }
+      ]
+    },
+    {
+      "id": "/c/en/baww/v",
+      "label": "baww",
+      "shared_connections": [
+        {
+          "via_node": "/c/en/internet_slang",
+          "edge_type": "/r/HasContext"
+        }
+      ]
+    }
+  ]
+}
 ```
 
 ## 🔍 Query Examples
