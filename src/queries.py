@@ -175,19 +175,24 @@ query nodesWithSingleNeighbor{
 """
 
 SIMILAR_NODES_QUERY = """
-query findSimilarNodesData($first: int, $offset: int) {
-  nodes(func: has(id), first: $first, offset: $offset) {
+query findSimilarNodesData($id: string) {
+  node_info(func: eq(id, $id)) {
     id
+    label
     to @facets(id) {
       id
+      label
     ~to @facets(id) {
       id
+      label
     	}
     }
     ~to @facets(id) {
       id
+      label
       to @facets(id) {
      	 id
+     	 label
     	}
     }
   }
