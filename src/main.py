@@ -1,4 +1,3 @@
-import json
 import time
 
 import click
@@ -41,8 +40,11 @@ def query_one_arg(name, query, help_text, err_text):
     @click.argument("node_id", required=True)
     def command(node_id):
         try:
+            time_start = time.time()
             results = dgraph_read(query, variables={"$id": node_id})
             json_print(results)
+            time_end = time.time()
+            verbose_print(f"Query executed in {time_end - time_start:.2f} seconds")
         except Exception as error:
             error_print(err_text, error)
 
@@ -138,7 +140,7 @@ def rename_node(node_id, new_label):
         uid = node_info["node"][0]["uid"]
         mutation = {"set": [{"uid": uid, "label": new_label}]}
         dgraph_write(mutation)
-        verbose_print(f"Successfully renamed node {node_id} to '{new_label}'")
+        json_print(f"Successfully renamed node {node_id} to '{new_label}'")
 
     except Exception as error:
         error_print("renaming node", error)
