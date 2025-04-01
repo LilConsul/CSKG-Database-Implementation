@@ -20,7 +20,8 @@ extract_time() {
     # Extract the time using grep
     time_line=$(echo "$output" | grep "Query executed in" | tail -1)
     if [[ -n "$time_line" ]]; then
-        execution_time=$(echo "$time_line" | sed -E 's/Query executed in ([0-9]+\.[0-9]+) seconds/\1/')
+        # Use tr to remove any newlines from the extracted time
+        execution_time=$(echo "$time_line" | sed -E 's/Query executed in ([0-9]+\.[0-9]+) seconds/\1/' | tr -d '\n\r')
         echo "$command: $execution_time seconds" >> $OUTPUT_FILE
     else
         echo "$command: No timing information found" >> $OUTPUT_FILE
