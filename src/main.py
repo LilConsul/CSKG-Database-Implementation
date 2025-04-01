@@ -70,6 +70,7 @@ def query_no_arg(name, query, help_text, err_text):
 def find_nodes_most_neighbors():
     """Find nodes with the most neighbors."""
     try:
+        time_start = time.time()
         max_count_results = dgraph_read(queries.MOST_NEIGHBORS_QUERY_AMOUNT)
         max_neighbors = max_count_results.get("nodes_with_most_neighbors", [{}])[0].get(
             "total_neighbors"
@@ -86,6 +87,8 @@ def find_nodes_most_neighbors():
             variables={"$max_neighbors": str(max_neighbors)},
         )
         json_print(results)
+        time_end = time.time()
+        verbose_print(f"Query executed in {time_end - time_start:.2f} seconds")
 
     except Exception as error:
         error_print("finding nodes with most neighbors", error)
@@ -97,6 +100,7 @@ def find_nodes_most_neighbors():
 def rename_node(node_id, new_label):
     """Rename a given node by updating its label."""
     try:
+        start_time = time.time()
         node_info = dgraph_read(
             """
             query getNode($id: string) {
@@ -116,6 +120,8 @@ def rename_node(node_id, new_label):
         mutation = {"set": [{"uid": uid, "label": new_label}]}
         dgraph_write(mutation)
         json_print(f"Successfully renamed node {node_id} to '{new_label}'")
+        end_time = time.time()
+        verbose_print(f"Query executed in {end_time - start_time:.2f} seconds")
 
     except Exception as error:
         error_print("renaming node", error)
@@ -126,6 +132,7 @@ def rename_node(node_id, new_label):
 def find_similar_nodes(node_id):
     """Find all 'similar' nodes that share common parents or children via the same edge type."""
     try:
+        start_time = time.time()
         similar_nodes = {}
 
         # Fetch node data
@@ -204,6 +211,8 @@ def find_similar_nodes(node_id):
 
         result = {"similar_nodes": list(similar_nodes.values())}
         json_print(result)
+        end_time = time.time()
+        verbose_print(f"Query executed in {end_time - start_time:.2f} seconds")
 
     except Exception as error:
         error_print("finding similar nodes", error)
@@ -215,11 +224,14 @@ def find_similar_nodes(node_id):
 def find_shortest_path(node_id1, node_id2):
     """Find the shortest path between two nodes, ignoring edge direction."""
     try:
+        start_time = time.time()
         results = dgraph_read(
             queries.SHORTEST_PATH_QUERY,
             variables={"$id1": str(node_id1), "$id2": str(node_id2)},
         )
         json_print(results)
+        end_time = time.time()
+        verbose_print(f"Query executed in {end_time - start_time:.2f} seconds")
     except Exception as error:
         error_print(f"finding path between {node_id1} and {node_id2}", error)
 
