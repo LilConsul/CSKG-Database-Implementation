@@ -228,4 +228,3 @@ query disantSynonymsAndAntonyms($id: string, $distance: int) {
   }
 }
 """
-
