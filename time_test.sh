@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# Start the database with -y flag to skip dialogs
-echo "Starting the database..."
-./dbcli.sh run -y
-
 # Path to the output file for time measurements
 OUTPUT_FILE="query_times.txt"
 
