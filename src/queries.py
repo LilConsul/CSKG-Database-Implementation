@@ -123,7 +123,6 @@ query countNodesWithoutPredecessors {
 }
 """
 
-
 MOST_NEIGHBORS_QUERY_AMOUNT = """
 query mostNeighborsAmount {
   var(func: has(id)) {
@@ -133,7 +132,7 @@ query mostNeighborsAmount {
   }
 
   var(){
-		M as max(val(total_neighbors))
+	M as max(val(total_neighbors))
   }
     
   nodes_with_most_neighbors(func: uid(M)) {
@@ -175,12 +174,29 @@ query nodesWithSingleNeighbor{
 }
 """
 
-RENAME_NODE_MUTATION = """
-
-"""
-
 SIMILAR_NODES_QUERY = """
-
+query findSimilarNodesData($id: string) {
+  node_info(func: eq(id, $id)) {
+    id
+    label
+    to @facets(id) {
+      id
+      label
+    ~to @facets(id) {
+      id
+      label
+    	}
+    }
+    ~to @facets(id) {
+      id
+      label
+      to @facets(id) {
+     	 id
+     	 label
+    	}
+    }
+  }
+}
 """
 
 SHORTEST_PATH_QUERY = """
@@ -213,6 +229,3 @@ query disantSynonymsAndAntonyms($id: string, $distance: int) {
 }
 """
 
-DISTANT_ANTONYMS_QUERY = """
-
-"""

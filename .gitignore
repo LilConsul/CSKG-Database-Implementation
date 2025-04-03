@@ -3,6 +3,9 @@
 data/*.*
 storage/
 
+#time tests
+query_times.txt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *$py.class

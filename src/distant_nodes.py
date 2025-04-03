@@ -1,4 +1,5 @@
 from collections import deque
+import time
 from message_handler import error_print, verbose_print, json_print
 from utils import dgraph_read
 from queries import DISTANT_SYNONYMS_ANTONYM
@@ -133,6 +134,7 @@ def find_distant_relationships(node_id, distance, want_synonyms=True):
         verbose_print(
             f"Querying for {relationship_type} of node: {node_id} with distance: {distance}",
         )
+        start_time = time.time()
 
         results = dgraph_query(node_id, distance)
         if not results:  # Handle case when query returns no results
@@ -152,7 +154,9 @@ def find_distant_relationships(node_id, distance, want_synonyms=True):
         # Output results
         verbose_print(f"Found {len(filtered_results)} distant {relationship_type}")
         result = {f"distant_{relationship_type}": filtered_results}
+        end_time = time.time()
         json_print(result)
+        verbose_print(f"Query executed in {end_time - start_time:.2f} seconds")
 
     except Exception as error:
         error_print(f"finding distant {relationship_type} for {node_id}", error)

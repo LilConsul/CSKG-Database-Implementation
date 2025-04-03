@@ -21,7 +21,13 @@ def dgraph_service(host: Optional[str] = None, port: Optional[int] = None):
     host = host or os.environ.get("DGRAPH_HOST", "localhost")
     port = port or int(os.environ.get("DGRAPH_PORT", "9080"))
 
-    client_stub = pydgraph.DgraphClientStub(f"{host}:{port}")
+    client_stub = pydgraph.DgraphClientStub(
+        f"{host}:{port}",
+        options=[
+            ("grpc.max_send_message_length", 2147483647),
+            ("grpc.max_receive_message_length", 2147483647),
+        ],
+    )
     client = pydgraph.DgraphClient(client_stub)
     try:
         yield client

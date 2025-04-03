@@ -32,12 +32,49 @@ def escape_string(s):
     return result
 
 
+def sanitize_label(node_id, label):
+    """Sanitize the label by returning the most appropriate label."""
+    if not label:
+        return None
+    if "|" not in label:
+        return label
+
+    for word in label.split("|"):
+        if word in node_id:
+            return word
+    return None
+
+
+def process_node(node_id, node_label, nodes, nodes_without_labels, batch, id_mapping):
+    """Process a single node and generate RDF triples."""
+    if not id_mapping[node_id]:
+        id_mapping[node_id] = sanitize_id(node_id)
+
+    sanitized_node_id = id_mapping[node_id]
+    escaped_node_id = escape_string(node_id)
+    node_label = sanitize_label(node_id, node_label)
+
+    if node_id not in nodes:
+        nodes.add(node_id)
+        batch.append(f'_:{sanitized_node_id} <id> "{escaped_node_id}" .')
+        if node_label:
+            batch.append(f'_:{sanitized_node_id} <label> "{node_label}" .')
+        else:
+            nodes_without_labels.add(node_id)
+    elif node_id in nodes_without_labels and node_label:
+        batch.append(f'_:{sanitized_node_id} <label> "{node_label}" .')
+        nodes_without_labels.remove(node_id)
+
+    return sanitized_node_id
+
+
 @measure_time
 def convert_tsv_to_rdf_gzip(input_file, output_file, batch_size=250_000):
     print(f"Converting {input_file} to RDF format (gzipped)...")
 
     nodes = set()
     relationships = set()
+    nodes_without_labels = set()
     id_mapping = defaultdict(lambda: None)
 
     def process_batch(batch, rdf_file):
@@ -66,41 +103,20 @@ def convert_tsv_to_rdf_gzip(input_file, output_file, batch_size=250_000):
             node2_label = escape_string(row[5]) if len(row) > 5 else ""
             relation_label = escape_string(row[6]) if len(row) > 6 else ""
 
-            if not id_mapping[node1_id]:
-                id_mapping[node1_id] = sanitize_id(node1_id)
-            if not id_mapping[node2_id]:
-                id_mapping[node2_id] = sanitize_id(node2_id)
+            # Process both nodes
+            sanitized_node1_id = process_node(
+                node1_id, node1_label, nodes, nodes_without_labels, batch, id_mapping
+            )
+            sanitized_node2_id = process_node(
+                node2_id, node2_label, nodes, nodes_without_labels, batch, id_mapping
+            )
 
-            sanitized_node1_id = id_mapping[node1_id]
-            sanitized_node2_id = id_mapping[node2_id]
-
-            escaped_node1_id = escape_string(node1_id)
-            escaped_node2_id = escape_string(node2_id)
-            escaped_relation = escape_string(relation)
-
-            if node1_id not in nodes:
-                nodes.add(node1_id)
-                batch.extend(
-                    [
-                        f'_:{sanitized_node1_id} <id> "{escaped_node1_id}" .',
-                        f'_:{sanitized_node1_id} <label> "{node1_label}" .',
-                    ]
-                )
-
-            if node2_id not in nodes:
-                nodes.add(node2_id)
-                batch.extend(
-                    [
-                        f'_:{sanitized_node2_id} <id> "{escaped_node2_id}" .',
-                        f'_:{sanitized_node2_id} <label> "{node2_label}" .',
-                    ]
-                )
-
+            # Process relationship
             rel_key = f"{node1_id}-{relation}-{node2_id}"
             if rel_key not in relationships:
                 relationships.add(rel_key)
                 batch.append(
-                    f'_:{sanitized_node1_id} <to> _:{sanitized_node2_id} (id="{escaped_relation}", label="{relation_label}") .'
+                    f'_:{sanitized_node1_id} <to> _:{sanitized_node2_id} (id="{escape_string(relation)}", label="{relation_label}") .'
                 )
 
             count += 1
@@ -111,11 +127,6 @@ def convert_tsv_to_rdf_gzip(input_file, output_file, batch_size=250_000):
                 )
 
         process_batch(batch, rdf_file)
-
-    print(
-        f"Conversion complete. Total nodes: {len(nodes):,}, Total relationships: {len(relationships):,}"
-    )
-    print(f"RDF file saved to {output_file}")
 
 
 if __name__ == "__main__":
