@@ -7,5 +7,4 @@ dependencies = [
     "click>=8.1.8",
     "psutil>=7.0.0",
     "pydgraph>=24.1.0",
-    "requests>=2.32.3",
 ]
