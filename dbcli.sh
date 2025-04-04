@@ -125,16 +125,6 @@ case "$1" in
     stop
     ;;
 *) # Default case - run the python query script
-    # Check if dbcli_python container exists
-    if ! docker ps -a | grep -q dbcli_python; then
-      echo "Container dbcli_python not found. Available commands:"
-      echo "  cleanup - Remove all containers, volumes, and data directories"
-      echo "  run     - Set up the environment and start the services"
-      echo "  stop    - Stop all running containers"
-      echo "Run '$0 run' first to set up the environment."
-      exit 1
-    fi
-
     retries=5
     while [ $retries -gt 0 ]; do
       if curl -s http://localhost:8080/health | grep -q "healthy"; then
