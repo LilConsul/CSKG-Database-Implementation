@@ -128,7 +128,7 @@ case "$1" in
     retries=5
     while [ $retries -gt 0 ]; do
       if curl -s http://localhost:8080/health | grep -q "healthy"; then
-        docker exec -it dbcli_python uv run /code/main.py "$@"
+        docker exec -it dbcli_python uv run /code/main.py "$@" 2>&1 | grep -v "Bytecode compiled"
         exit 0
       else
         echo "Server not ready. Retrying in 5 seconds... ($retries retries left)"
