@@ -123,38 +123,19 @@ query countNodesWithoutPredecessors {
 }
 """
 
-MOST_NEIGHBORS_QUERY_AMOUNT = """
-query mostNeighborsAmount {
-  var(func: has(id)) {
-    successors_count as count(to)
-    predecessors_count as count(~to)
-    total_neighbors as math(successors_count + predecessors_count)
-  }
-
-  var(){
-	M as max(val(total_neighbors))
-  }
-    
-  nodes_with_most_neighbors(func: uid(M)) {
-    total_neighbors: val(M)
-  }
-}
-"""
-
 NODES_MOST_NEIGHBORS_QUERY = """
-query nodesWithMostNeighbors($max_neighbors: int) {
+query nodesWithMostNeighbors($offset: string) {
   var(func: has(id)) {
     successors_count as count(to)
     predecessors_count as count(~to)
     total_neighbors as math(successors_count + predecessors_count)
   }
-
-  max_neighbors_value(func: has(id))
-      @filter(eq(val(total_neighbors), $max_neighbors))
-      {
-        id
-        label
-      }
+      
+  nodes_with_most_neighbors(func: has(id), orderdesc: val(total_neighbors), first: 10, offset: $offset) {
+    total_neighbors: val(total_neighbors)
+    id
+    label
+  }
 }
 """
 

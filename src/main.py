@@ -5,8 +5,8 @@ import click
 import queries
 from distant_nodes import find_distant_relationships
 from message_handler import error_print, json_print, verbose_print
-from utils import dgraph_read, dgraph_write
 from similar_nodes import get_similar_nodes
+from utils import dgraph_read, dgraph_write
 
 
 @click.group()
@@ -72,23 +72,47 @@ def find_nodes_most_neighbors():
     """Find nodes with the most neighbors."""
     try:
         time_start = time.time()
-        max_count_results = dgraph_read(queries.MOST_NEIGHBORS_QUERY_AMOUNT)
-        max_neighbors = max_count_results.get("nodes_with_most_neighbors", [{}])[0].get(
-            "total_neighbors"
-        )
 
-        if not max_neighbors:
-            error_print("determining maximum neighbor count", None)
+        offset = 0
+        max_neighbors = 0
+        nodes_with_max = []
+        more_nodes_possible = True
 
-        verbose_print(f"Maximum number of neighbors found: {max_neighbors}")
-        verbose_print(f"Searching for all nodes with {max_neighbors} neighbors...")
+        while more_nodes_possible:
+            results = dgraph_read(
+                queries.NODES_MOST_NEIGHBORS_QUERY,
+                variables={"$offset": str(offset)},
+            )
 
-        results = dgraph_read(
-            queries.NODES_MOST_NEIGHBORS_QUERY,
-            variables={"$max_neighbors": str(max_neighbors)},
-        )
+            result_nodes = results.get("nodes_with_most_neighbors", [])
+            if not result_nodes:
+                break
+
+            # Set the max_neighbors from the first batch
+            if offset == 0:
+                max_neighbors = result_nodes[0].get("total_neighbors", 0)
+
+            # Collect nodes with max neighbors count
+            for node in result_nodes:
+                if node.get("total_neighbors") == max_neighbors:
+                    nodes_with_max.append(node)
+                else:
+                    more_nodes_possible = False
+                    break
+
+            # Check if we need another page
+            if more_nodes_possible and len(result_nodes) == 10:
+                offset += 10
+            else:
+                more_nodes_possible = False
+
         time_end = time.time()
-        json_print(results)
+
+        result = {"nodes_with_most_neighbors": nodes_with_max}
+        json_print(result)
+        click.echo(
+            f"Found {len(nodes_with_max)} nodes with {max_neighbors} neighbors"
+        )
         verbose_print(f"Query executed in {time_end - time_start:.2f} seconds")
 
     except Exception as error:
