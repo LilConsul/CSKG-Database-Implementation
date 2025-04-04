@@ -138,7 +138,7 @@ def convert_tsv_to_rdf_gzip(
     with gzip.open(
         output_file, "wt", encoding="utf-8", compresslevel=compression_level
     ) as rdf_file:
-        with gzip.open(input_file, "rt", encoding="utf-8", errors="replace") as f:
+        with gzip.open(input_file, "rt", encoding="ascii", errors="replace") as f:
             reader = csv.reader(f, delimiter="\t")
             header = next(reader)
             print(f"Processing TSV with columns: {header}")
