@@ -331,26 +331,28 @@ query nodesWithMostNeighbors($max_neighbors: int) {
 
 ## 🧪 Testing
 
-> **Note:** All testing was performed on the PC with the following specifications:
+> **Note:** <br/>
+> All testing was performed on the PC with the following specifications:
 > - CPU: Intel Core i5-14400F
 > - GPU: NVIDIA RTX 3060 12GB
 > - RAM: 16GB DDR4 @ 3600MHz
-> - SSD: Samsung M.2 NVME 980
+> - SSD: Samsung 980 M.2 NVME 
 
 
 ### RDF Converter Optimization
 
-The Python RDF converter underwent several optimization iterations, resulting in a 33.3% improvement in execution time from the initial implementation. Below is a breakdown of each optimization step and its impact:
+The Python RDF converter underwent several optimization iterations, resulting in a 54.2% improvement in execution time from the initial implementation. Below is a breakdown of each optimization step and its impact:
 
 <img src="img/rdf_convertor_optimization.svg" alt="Convertor Optimization Diagram" style="width:100%; height:auto;" />
 
-| Optimization Step | Execution Time | Improvement | Description |
-|-------------------|---------------|-------------|-------------|
-| Basic Implementation | 72 sec | Baseline    | Original implementation using standard Python libraries |
-| ID Sanitizer without Regex | 70 sec | 2.8%        | Replaced regex-based ID sanitization with direct string operations |
-| Escape String Caching | 69 sec | 4.1%        | Implemented caching mechanism for repeated string escape operations |
-| Precompiled Regex Patterns | 62 sec | 13.9%       | Used precompiled regex patterns for escape_string function |
-| Batch Processing Approach | 48 sec | 33.3%       | Redesigned batch processing algorithm for more efficient memory usage |
+| Optimization Step | Execution Time | Improvement | Description                                                                                                                                                          |
+|-------------------|---------------|-------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Basic Implementation | 72 sec | Baseline    | Original implementation using standard Python libraries                                                                                                              |
+| ID Sanitizer without Regex | 70 sec | 2.8%        | Replaced regex-based ID sanitization with direct string operations                                                                                                   |
+| Escape String Caching | 69 sec | 4.1%        | Implemented caching mechanism for repeated string escape operations                                                                                                  |
+| Precompiled Regex Patterns | 62 sec | 13.9%       | Used precompiled regex patterns for escape_string function                                                                                                           |
+| Batch Processing Approach | 48 sec | 33.3%       | Redesigned batch processing algorithm for more efficient memory usage                                                                                                |
+| Label Handling | 33 sec | 54.2%      | Fixed label with pipes handling , improved null label processing, dynamic batch sizing, reduced compression level, removed defaultdict usage and less function calls |
 
 
 ### Database Loading Optimization
