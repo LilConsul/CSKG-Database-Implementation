@@ -2,7 +2,6 @@ import csv
 import gzip
 import re
 import string
-from collections import defaultdict
 from measure_time import measure_time
 from functools import lru_cache
 
@@ -57,29 +56,6 @@ def sanitize_label(node_id, label):
     return best_word
 
 
-def process_node(node_id, node_label, nodes, nodes_without_labels, batch, id_mapping):
-    """Process a single node and generate RDF triples."""
-    if not id_mapping[node_id]:
-        id_mapping[node_id] = sanitize_id(node_id)
-
-    sanitized_node_id = id_mapping[node_id]
-    escaped_node_id = escape_string(node_id)
-    node_label = sanitize_label(sanitized_node_id, node_label)
-
-    if node_id not in nodes:
-        nodes.add(node_id)
-        batch.append(f'_:{sanitized_node_id} <id> "{escaped_node_id}" .')
-        if node_label:
-            batch.append(f'_:{sanitized_node_id} <label> "{node_label}" .')
-        else:
-            nodes_without_labels.add(node_id)
-    elif node_id in nodes_without_labels and node_label:
-        batch.append(f'_:{sanitized_node_id} <label> "{node_label}" .')
-        nodes_without_labels.remove(node_id)
-
-    return sanitized_node_id
-
-
 def get_optimal_batch_size():
     """Determine the optimal batch size for RDF conversion based on available system RAM.
     Returns:
@@ -108,70 +84,192 @@ def get_optimal_batch_size():
         return 250_000
 
 
+def count_lines_in_file(input_file):
+    print("Counting lines to initialize progress bar...")
+    try:
+        from tqdm import tqdm
+    except ImportError:
+        return None
+
+    total_lines = 0
+    with gzip.open(input_file, "rb") as f:
+        buf_size = 1024 * 1024
+        read_f = f.read
+        buf = read_f(buf_size)
+
+        while buf:
+            total_lines += buf.count(b"\n")
+            buf = read_f(buf_size)
+
+    valid_lines = total_lines - 1
+
+    return valid_lines
+
+
 @measure_time
-def convert_tsv_to_rdf_gzip(input_file, output_file, batch_size=250_000):
-    print(f"Converting {input_file} to RDF format (gzipped)...")
+def convert_tsv_to_rdf_gzip(
+    input_file, output_file, batch_size=250_000, *, total_lines=None
+):
+    if total_lines is None:
+        use_tqdm = False
+    else:
+        from tqdm import tqdm
+
+        print(f"Found {total_lines:,} lines to process, using tqdm for progress bar.")
+        use_tqdm = True
+
+    print(f"Converting {input_file} to RDF format...")
 
     nodes = set()
     relationships = set()
     nodes_without_labels = set()
-    id_mapping = defaultdict(lambda: None)
+    id_mapping = {}
 
     def process_batch(batch, rdf_file):
         if batch:
-            rdf_file.write("\n".join(batch))
-            rdf_file.write("\n")
+            rdf_file.write("\n".join(batch) + "\n")
             batch.clear()
 
-    with (
-        gzip.open(input_file, "rt", encoding="utf-8") as tsv_file,
-        gzip.open(output_file, "wt", encoding="utf-8", compresslevel=4) as rdf_file,
-    ):
-        reader = csv.reader(tsv_file, delimiter="\t")
-        next(reader, None)  # Skip header
+    batch = []
+    count = 0
+    progress_interval = min(100_000, batch_size // 10)
+    compression_level = 3
 
-        batch = []
-        count = 0
+    with gzip.open(
+        output_file, "wt", encoding="utf-8", compresslevel=compression_level
+    ) as rdf_file:
+        with gzip.open(input_file, "rt", encoding="utf-8", errors="replace") as f:
+            reader = csv.reader(f, delimiter="\t")
+            header = next(reader)
+            print(f"Processing TSV with columns: {header}")
 
-        for row in reader:
-            if len(row) < 10:
-                continue
+            if use_tqdm:
+                pbar = tqdm(total=total_lines, desc="Converting", unit="records")
+                iterator = reader
+            else:
+                iterator = reader
 
-            # Unpack row values
-            row_id, node1_id, relation, node2_id = row[:4]
-            node1_label = escape_string(row[4]) if len(row) > 4 else ""
-            node2_label = escape_string(row[5]) if len(row) > 5 else ""
-            relation_label = escape_string(row[6]) if len(row) > 6 else ""
+            for row in iterator:
+                if len(row) < 7:
+                    if use_tqdm:
+                        pbar.update(1)
+                    continue
 
-            # Process both nodes
-            sanitized_node1_id = process_node(
-                node1_id, node1_label, nodes, nodes_without_labels, batch, id_mapping
-            )
-            sanitized_node2_id = process_node(
-                node2_id, node2_label, nodes, nodes_without_labels, batch, id_mapping
-            )
+                node1_id = row[1] or ""
+                relation = row[2] or ""
+                node2_id = row[3] or ""
 
-            # Process relationship
-            rel_key = f"{node1_id}-{relation}-{node2_id}"
-            if rel_key not in relationships:
-                relationships.add(rel_key)
-                batch.append(
-                    f'_:{sanitized_node1_id} <to> _:{sanitized_node2_id} (id="{escape_string(relation)}", label="{relation_label}") .'
-                )
+                if not (node1_id and relation and node2_id):
+                    if use_tqdm:
+                        pbar.update(1)
+                    continue
 
-            count += 1
-            if count % batch_size == 0:
-                process_batch(batch, rdf_file)
-                print(
-                    f"Processed {count:,} records. Nodes: {len(nodes):,}, Relationships: {len(relationships):,}"
-                )
+                # Get sanitized IDs with fast lookups
+                if node1_id not in id_mapping:
+                    id_mapping[node1_id] = sanitize_id(node1_id)
+                sanitized_node1_id = id_mapping[node1_id]
+
+                if node2_id not in id_mapping:
+                    id_mapping[node2_id] = sanitize_id(node2_id)
+                sanitized_node2_id = id_mapping[node2_id]
+
+                if node1_id not in nodes:
+                    nodes.add(node1_id)
+                    batch.append(
+                        f'_:{sanitized_node1_id} <id> "{escape_string(node1_id)}" .'
+                    )
+
+                    node1_label = row[4] or ""
+                    if node1_label:
+                        processed_label = sanitize_label(
+                            sanitized_node1_id, node1_label
+                        )
+                        if processed_label:
+                            batch.append(
+                                f'_:{sanitized_node1_id} <label> "{escape_string(processed_label)}" .'
+                            )
+                        else:
+                            nodes_without_labels.add(node1_id)
+                    else:
+                        nodes_without_labels.add(node1_id)
+
+                elif node1_id in nodes_without_labels and (row[4] or ""):
+                    processed_label = sanitize_label(sanitized_node1_id, row[4])
+                    if processed_label:
+                        batch.append(
+                            f'_:{sanitized_node1_id} <label> "{escape_string(processed_label)}" .'
+                        )
+                        nodes_without_labels.remove(node1_id)
+
+                if node2_id not in nodes:
+                    nodes.add(node2_id)
+                    batch.append(
+                        f'_:{sanitized_node2_id} <id> "{escape_string(node2_id)}" .'
+                    )
+
+                    node2_label = row[5] or ""
+                    if node2_label:
+                        processed_label = sanitize_label(
+                            sanitized_node2_id, node2_label
+                        )
+                        if processed_label:
+                            batch.append(
+                                f'_:{sanitized_node2_id} <label> "{escape_string(processed_label)}" .'
+                            )
+                        else:
+                            nodes_without_labels.add(node2_id)
+                    else:
+                        nodes_without_labels.add(node2_id)
+
+                elif node2_id in nodes_without_labels and (row[5] or ""):
+                    processed_label = sanitize_label(sanitized_node2_id, row[5])
+                    if processed_label:
+                        batch.append(
+                            f'_:{sanitized_node2_id} <label> "{escape_string(processed_label)}" .'
+                        )
+                        nodes_without_labels.remove(node2_id)
+
+                # Process relationships
+                rel_key = f"{node1_id}-{relation}-{node2_id}"
+                if rel_key not in relationships:
+                    relationships.add(rel_key)
+                    relation_label = escape_string(row[6] or "")
+                    batch.append(
+                        f'_:{sanitized_node1_id} <to> _:{sanitized_node2_id} (id="{escape_string(relation)}", label="{relation_label}") .'
+                    )
+
+                count += 1
+                if use_tqdm:
+                    pbar.update(1)
+                    if count % 10000 == 0:
+                        pbar.set_postfix(
+                            {"Nodes": len(nodes), "Relationships": len(relationships)}
+                        )
+                elif count % progress_interval == 0:
+                    print(f"Processed {count:,} records...")
+
+                if count % batch_size == 0:
+                    process_batch(batch, rdf_file)
+                    if not use_tqdm:
+                        print(
+                            f"Processed {count:,} records. Nodes: {len(nodes):,}, Relationships: {len(relationships):,}"
+                        )
+
+            if use_tqdm:
+                pbar.close()
 
         process_batch(batch, rdf_file)
+        print(
+            f"Finished processing {count:,} records. Generated {len(nodes):,} nodes and {len(relationships):,} relationships."
+        )
 
 
 if __name__ == "__main__":
+    in_file = "../data/cskg.tsv.gz"
+    out_file = "../data/data.rdf.gz"
     convert_tsv_to_rdf_gzip(
-        input_file="../data/cskg.tsv.gz",
-        output_file="../data/data.rdf.gz",
+        input_file=in_file,
+        output_file=out_file,
         batch_size=get_optimal_batch_size(),
+        total_lines=count_lines_in_file(in_file),
     )

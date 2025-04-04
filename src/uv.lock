@@ -31,6 +31,7 @@ dependencies = [
     { name = "click" },
     { name = "psutil" },
     { name = "pydgraph" },
+    { name = "tqdm" },
 ]
 
 [package.metadata]
@@ -38,6 +39,7 @@ requires-dist = [
     { name = "click", specifier = ">=8.1.8" },
     { name = "psutil", specifier = ">=7.0.0" },
     { name = "pydgraph", specifier = ">=24.1.0" },
+    { name = "tqdm", specifier = ">=4.67.1" },
 ]
 
 [[package]]
@@ -98,4 +100,16 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/e1/59/1f4ed9dac9721ddf5efe0d1cd7a5c87546b14a0d7d6e2cb0774169cfeaf8/pydgraph-24.1.0.tar.gz", hash = "sha256:2659c58476a219b983a0139af22d4e7cfde97a25047800d088a4f5436e0172b7", size = 42373 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/04/7c/023c19872961f44aad5a5d10e2286791a9d33964ba5260ccf3149368adee/pydgraph-24.1.0-py3-none-any.whl", hash = "sha256:08ade0e5047f4a730368a6c6cea688190fc5c45828ae3fc833a3c07a9ca52c0f", size = 29860 },
+]
+
+[[package]]
+name = "tqdm"
+version = "4.67.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "colorama", marker = "sys_platform == 'win32'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a8/4b/29b4ef32e036bb34e4ab51796dd745cdba7ed47ad142a9f4a1eb8e0c744d/tqdm-4.67.1.tar.gz", hash = "sha256:f8aef9c52c08c13a65f30ea34f4e5aac3fd1a34959879d7e59e63027286627f2", size = 169737 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d0/30/dc54f88dd4a2b5dc8a0279bdd7270e735851848b762aeb1c1184ed1f6b14/tqdm-4.67.1-py3-none-any.whl", hash = "sha256:26445eca388f82e72884e0d580d5464cd801a3ea01e63e5601bdff9ba6a48de2", size = 78540 },
 ]
