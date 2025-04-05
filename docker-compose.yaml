@@ -26,7 +26,7 @@ services:
     restart: on-failure
     environment:
 #                              2^32 = 4294967296
-      DGRAPH_ALPHA_LIMIT: "query-edge=4294967296; normalize-node=10000; mutations-nquad=1000000"
+      DGRAPH_ALPHA_LIMIT: "query-edge=4294967296; normalize-node=4294967296; mutations-nquad=1000000"
     depends_on:
       - zero
     command: bash ./bulk_or_alpha.sh

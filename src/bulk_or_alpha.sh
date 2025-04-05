@@ -37,7 +37,7 @@ check_existing_RDF () {
 
 RUN_alpha () {
     echo "Dgraph Alpha Starting ..."
-    dgraph alpha --bindall=true --my=alpha:7080 --zero=zero:5080 -p ${my_alpha_p_0}
+    dgraph alpha --bindall=true --my=alpha:7080 --zero=zero:5080 -p ${my_alpha_p_0} --cache "percentage=0,65,35"
 }
 
 RUN_BulkLoader () {
