@@ -55,10 +55,10 @@ echo "Running all queries with --verbose flag..."
 
 # No argument commands
 run_no_arg_command "count-nodes"
-#run_no_arg_command "count-nodes-no-successors"
-#run_no_arg_command "count-nodes-no-predecessors"
-#run_no_arg_command "count-nodes-single-neighbor"
-#run_no_arg_command "find-nodes-most-neighbors"
+run_no_arg_command "count-nodes-no-successors"
+run_no_arg_command "count-nodes-no-predecessors"
+run_no_arg_command "count-nodes-single-neighbor"
+run_no_arg_command "find-nodes-most-neighbors"
 
 # One node ID argument commands
 EXAMPLE_NODE_ID="/c/en/happy"
@@ -78,9 +78,9 @@ NODE_ID1="/c/en/happy"
 NODE_ID2="/c/en/sad"
 DISTANCE=2
 
-#run_two_arg_command "find-shortest-path" "$NODE_ID1" "$NODE_ID2"
-#run_two_arg_command "find-distant-synonyms" "$NODE_ID1" "$DISTANCE"
-#run_two_arg_command "find-distant-antonyms" "$NODE_ID1" "$DISTANCE"
+run_two_arg_command "find-shortest-path" "$NODE_ID1" "$NODE_ID2"
+run_two_arg_command "find-distant-synonyms" "$NODE_ID1" "$DISTANCE"
+run_two_arg_command "find-distant-antonyms" "$NODE_ID1" "$DISTANCE"
 
 # Skip rename-node as it modifies data
 
