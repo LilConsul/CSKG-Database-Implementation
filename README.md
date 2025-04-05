@@ -231,7 +231,7 @@ System can find all simillar nodes, that share the same parent or child with the
 ### Displaying Time Measurements
 Add the `--verbose` or flag to any command to display detailed execution time measurements:
 ```bash
-./dbcli.sh count-predecessors --verbose /c/en/happy 
+./dbcli.sh --verbose count-predecessors /c/en/happy 
 ```
 ```
 `query output`
@@ -280,18 +280,18 @@ query shortestPath($id1: string, $id2: string) {
 
 #### Find Nodes With Most Neighbors
 ```
-query nodesWithMostNeighbors($max_neighbors: int) {
+query nodesWithMostNeighbors($offset: string) {
   var(func: has(id)) {
     successors_count as count(to)
     predecessors_count as count(~to)
     total_neighbors as math(successors_count + predecessors_count)
   }
-
-  max_neighbors_value(func: has(id))
-      @filter(eq(val(total_neighbors), $max_neighbors)) {
-        id
-        label
-      }
+      
+  nodes_with_most_neighbors(func: has(id), orderdesc: val(total_neighbors), first: 10, offset: $offset) {
+    total_neighbors: val(total_neighbors)
+    id
+    label
+  }
 }
 ```
 
