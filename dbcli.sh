@@ -7,6 +7,20 @@ STORAGE_DIR="./storage"
 SERVER_READY_MARKER="Server is ready"
 
 
+check_docker_running() {
+  if ! [ -x "$(command -v docker)" ]; then
+    echo "Error: Docker is not installed or not in PATH."
+    echo "Please install Docker and ensure it is in your PATH."
+    exit 1
+  fi
+
+  if ! docker info > /dev/null 2>&1; then
+    echo "Docker is not running. Please start Docker and try again."
+    exit 1
+  fi
+}
+
+
 download_file() {
   echo "Downloading file..."
   curl -L https://zenodo.org/records/4331372/files/cskg.tsv.gz?download=1 -o "$FILE"
@@ -109,10 +123,7 @@ setup() {
 }
 
 # Main entrypoint logic
-if ! [ -x "$(command -v docker)" ]; then
-  echo "Error: Docker is not installed or not in PATH."
-  exit 1
-fi
+check_docker_running
 
 case "$1" in
   "cleanup")
