@@ -1,0 +1,167 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 950 600">
+  <!-- Background with subtle gradient -->
+  <defs>
+    <!-- Category colors -->
+    <style type="text/css">
+      .fast { fill: #4285f4; }
+      .medium { fill: #34a853; }
+      .slow { fill: #ea4335; }
+      .very-slow { fill: #fbbc05; }
+      .category-label { font-family: Arial; font-size: 12px; font-weight: bold; }
+      .performance-line { stroke-dasharray: 5,5; stroke-width: 1.5; }
+    </style>
+  </defs>
+  <rect width="950" height="600" fill="#f8f9fa" stroke="#ddd" stroke-width="1"/>
+
+  <!-- Title and Description -->
+  <text x="475" y="40" font-family="Arial" font-size="24" text-anchor="middle" font-weight="bold" fill="#333">Query Execution Times</text>
+  <text x="475" y="70" font-family="Arial" font-size="16" text-anchor="middle" fill="#666"> Database Performance Analysis</text>
+
+  <!-- Legend -->
+  <rect x="800" y="90" width="16" height="16" class="fast" rx="2" />
+  <text x="825" y="104" font-family="Arial" font-size="14">Fast (&lt; 0.1s)</text>
+  <rect x="800" y="115" width="16" height="16" class="medium" rx="2" />
+  <text x="825" y="129" font-family="Arial" font-size="14">Medium (0.1s - 1s)</text>
+  <rect x="800" y="140" width="16" height="16" class="slow" rx="2" />
+  <text x="825" y="154" font-family="Arial" font-size="14">Slow (1s - 5s)</text>
+  <rect x="800" y="165" width="16" height="16" class="very-slow" rx="2" />
+  <text x="825" y="179" font-family="Arial" font-size="14">Very Slow (&gt; 5s)</text>
+
+  <!-- Performance threshold lines -->
+  <line x1="100" y1="480" x2="800" y2="480" stroke="#4285f4" class="performance-line" />
+  <text x="810" y="485" font-family="Arial" font-size="12" fill="#4285f4">0.1s</text>
+
+  <line x1="100" y1="450" x2="800" y2="450" stroke="#34a853" class="performance-line" />
+  <text x="810" y="455" font-family="Arial" font-size="12" fill="#34a853">1s</text>
+
+  <line x1="100" y1="300" x2="800" y2="300" stroke="#ea4335" class="performance-line" />
+  <text x="810" y="305" font-family="Arial" font-size="12" fill="#ea4335">5s</text>
+
+  <!-- Y-Axis -->
+  <line x1="100" y1="500" x2="100" y2="100" stroke="#333" stroke-width="2"/>
+  <text x="90" y="500" font-family="Arial" font-size="12" text-anchor="end">0s</text>
+  <text x="90" y="450" font-family="Arial" font-size="12" text-anchor="end">1s</text>
+  <text x="90" y="400" font-family="Arial" font-size="12" text-anchor="end">2s</text>
+  <text x="90" y="350" font-family="Arial" font-size="12" text-anchor="end">3s</text>
+  <text x="90" y="300" font-family="Arial" font-size="12" text-anchor="end">5s</text>
+  <text x="90" y="250" font-family="Arial" font-size="12" text-anchor="end">6s</text>
+  <text x="90" y="200" font-family="Arial" font-size="12" text-anchor="end">7s</text>
+  <text x="90" y="150" font-family="Arial" font-size="12" text-anchor="end">8s</text>
+  <text x="90" y="100" font-family="Arial" font-size="12" text-anchor="end">10s</text>
+
+  <!-- X-Axis -->
+  <line x1="100" y1="500" x2="800" y2="500" stroke="#333" stroke-width="2"/>
+
+  <!-- Y-Axis Label -->
+  <text x="40" y="300" font-family="Arial" font-size="14" font-weight="bold" text-anchor="middle" transform="rotate(-90, 40, 300)">Execution Time (seconds)</text>
+
+  <!-- Bars with groups -->
+  <!-- Each group -->
+  <g font-family="Arial" font-size="12">
+    <!-- Simple Lookups -->
+    <g transform="translate(120,0)">
+      <rect y="498" width="28" height="2" class="fast" rx="2"/>
+      <text x="14" y="485" text-anchor="middle" font-weight="bold">0.01s</text>
+      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">find-succ</text>
+    </g>
+
+    <g transform="translate(160,0)">
+      <rect y="498" width="28" height="2" class="fast" rx="2"/>
+      <text x="14" y="485" text-anchor="middle" font-weight="bold">0.01s</text>
+      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">count-succ</text>
+    </g>
+
+    <g transform="translate(200,0)">
+      <rect y="498" width="28" height="2" class="fast" rx="2"/>
+      <text x="14" y="485" text-anchor="middle" font-weight="bold">0.01s</text>
+      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">count-neigh</text>
+    </g>
+
+    <g transform="translate(240,0)">
+      <rect y="498" width="28" height="2" class="fast" rx="2"/>
+      <text x="14" y="485" text-anchor="middle" font-weight="bold">0.01s</text>
+      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">count-pred</text>
+    </g>
+
+    <g transform="translate(280,0)">
+      <rect y="498" width="28" height="2" class="fast" rx="2"/>
+      <text x="14" y="485" text-anchor="middle" font-weight="bold">0.01s</text>
+      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">grandchild</text>
+    </g>
+
+    <g transform="translate(320,0)">
+      <rect y="497" width="28" height="3" class="fast" rx="2"/>
+      <text x="14" y="484" text-anchor="middle" font-weight="bold">0.03s</text>
+      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">find-pred</text>
+    </g>
+
+    <!-- Path Finding -->
+    <g transform="translate(360,0)">
+      <rect y="497" width="28" height="3" class="fast" rx="2"/>
+      <text x="14" y="484" text-anchor="middle" font-weight="bold">0.03s</text>
+      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">find-neigh</text>
+    </g>
+
+    <g transform="translate(400,0)">
+      <rect y="480" width="28" height="20" class="medium" rx="2"/>
+      <text x="14" y="468" text-anchor="middle" font-weight="bold">0.29s</text>
+      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">shortest-path</text>
+    </g>
+
+    <g transform="translate(440,0)">
+      <rect y="477" width="28" height="23" class="medium" rx="2"/>
+      <text x="14" y="465" text-anchor="middle" font-weight="bold">0.33s</text>
+      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">grandparent</text>
+    </g>
+
+    <g transform="translate(480,0)">
+      <rect y="429" width="28" height="71" class="medium" rx="2"/>
+      <text x="14" y="417" text-anchor="middle" font-weight="bold">0.71s</text>
+      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">count-nodes</text>
+    </g>
+
+    <g transform="translate(520,0)">
+      <rect y="394" width="28" height="106" class="medium" rx="2"/>
+      <text x="14" y="382" text-anchor="middle" font-weight="bold">1.34s</text>
+      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">similar</text>
+    </g>
+
+    <!-- Complex Analysis -->
+    <g transform="translate(560,0)">
+      <rect y="316" width="28" height="184" class="slow" rx="2"/>
+      <text x="14" y="304" text-anchor="middle" font-weight="bold">3.68s</text>
+      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">no-predecessors</text>
+    </g>
+
+    <g transform="translate(600,0)">
+      <rect y="302" width="28" height="198" class="slow" rx="2"/>
+      <text x="14" y="290" text-anchor="middle" font-weight="bold">3.97s</text>
+      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">distant-ant</text>
+    </g>
+
+    <g transform="translate(640,0)">
+      <rect y="295" width="28" height="205" class="slow" rx="2"/>
+      <text x="14" y="283" text-anchor="middle" font-weight="bold">4.11s</text>
+      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">no-successors</text>
+    </g>
+
+    <g transform="translate(680,0)">
+      <rect y="284" width="28" height="216" class="slow" rx="2"/>
+      <text x="14" y="272" text-anchor="middle" font-weight="bold">4.32s</text>
+      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">distant-syn</text>
+    </g>
+
+    <!-- Graph Operations -->
+    <g transform="translate(720,0)">
+      <rect y="154" width="28" height="346" class="very-slow" rx="2"/>
+      <text x="14" y="142" text-anchor="middle" font-weight="bold">8.62s</text>
+      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">single-neighbor</text>
+    </g>
+
+    <g transform="translate(760,0)">
+      <rect y="134" width="28" height="366" class="very-slow" rx="2"/>
+      <text x="14" y="122" text-anchor="middle" font-weight="bold">9.12s</text>
+      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">most-neighbors</text>
+    </g>
+  </g>
+</svg>

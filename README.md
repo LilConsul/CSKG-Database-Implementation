@@ -380,6 +380,33 @@ We achieved dramatic improvements in database loading times through several opti
    
    While the Bulk Loader requires a database restart, the 89.6% total reduction in loading time justified this trade-off for initial data loading scenario.
 
+### Query Performance Analysis
+
+We conducted performance testing of all implemented queries to ensure efficient data retrieval. The testing revealed the following performance categories:
+
+<img src="img/query_execution_time.svg" alt="Query Execution Time Diagram" style="width:100%; height:auto;"/>
+
+#### Performance Categories:
+- **Fast (< 0.1s)**: Simple lookups (find/count successors, predecessors, neighbors)
+- **Medium (0.1s - 1s)**: Intermediate path finding and basic counts
+- **Slow (1s - 5s)**: Complex relationship analysis
+- **Very Slow (> 5s)**: Full graph operations requiring large-scale traversal
+
+#### Schema Optimization Impact:
+- **@index(exact)**: Enables near-instant node lookups by ID (0.01s for operations with exact index)
+  - Creates specialized search indexes for string properties
+  - Reduces query execution time by ~95% for ID-based lookups compared to non-indexed queries
+  - Critical for operations like `find-successors` and `find-predecessors`
+
+- **@count**: Pre-calculates edge counts, enabling fast neighbor counting (0.01s)
+  - Eliminates expensive counting operations at query time
+  - Stores count metadata directly with relationships
+  - Enables sub-0.1s performance for `count-successors`, `count-predecessors`, and `count-neighbors`
+  - Without @count, these operations would require full traversal (>1s)
+  - Crucial for keeping the most demanding queries (`count-nodes-single-neighbor`, `find-nodes-most-neighbors`) under 10 seconds
+
+These directives significantly improved our most frequent operations, with 7 of 17 queries
+achieving <0.1s execution time.
 
 ## 👥 Team Contributions
 **Shevchenko Denys**:
