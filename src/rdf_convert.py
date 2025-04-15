@@ -1,9 +1,10 @@
 import csv
 import gzip
 import re
-import string
 from measure_time import measure_time
 from functools import lru_cache
+import unicodedata
+
 
 csv.field_size_limit(2**31 - 1)
 
@@ -14,10 +15,6 @@ ESCAPE_PATTERNS = [
     (re.compile(r"\r"), r"\r"),
     (re.compile(r"\t"), r"\t"),
 ]
-VALID_CHARS = set(string.ascii_letters + string.digits + "_-")
-TRANSLATION_TABLE = str.maketrans(
-    {c: "_" for c in string.printable if c not in VALID_CHARS}
-)
 
 
 @lru_cache(maxsize=4096)
@@ -34,7 +31,10 @@ def escape_string(s):
 def sanitize_id(id_string):
     if not id_string:
         return ""
-    return id_string.translate(TRANSLATION_TABLE)
+
+    normalized = unicodedata.normalize("NFKD", id_string)
+    sanitized = re.sub(r"[^\w]", "_", normalized, flags=re.ASCII)
+    return sanitized
 
 
 def sanitize_label(node_id, label):
@@ -138,21 +138,21 @@ def convert_tsv_to_rdf_gzip(
     with gzip.open(
         output_file, "wt", encoding="utf-8", compresslevel=compression_level
     ) as rdf_file:
-        with gzip.open(input_file, "rt", encoding="ascii", errors="replace") as f:
-            reader = csv.reader(f, delimiter="\t")
+        with gzip.open(input_file, "rt", encoding="utf-8", errors="replace") as f:
+            reader = csv.reader(f, delimiter="\t", quoting=csv.QUOTE_NONE)
             header = next(reader)
             print(f"Processing TSV with columns: {header}")
 
             if use_tqdm:
                 pbar = tqdm(total=total_lines, desc="Converting", unit="records")
-                iterator = reader
-            else:
-                iterator = reader
+
+            iterator = reader
 
             for row in iterator:
-                if len(row) < 7:
+                if len(row) < 4:
                     if use_tqdm:
                         pbar.update(1)
+                    print(f"Warning: Skipping row with insufficient columns: {row}")
                     continue
 
                 node1_id = row[1] or ""
@@ -179,7 +179,7 @@ def convert_tsv_to_rdf_gzip(
                         f'_:{sanitized_node1_id} <id> "{escape_string(node1_id)}" .'
                     )
 
-                    node1_label = row[4] or ""
+                    node1_label = row[4] if len(row) > 4 else None
                     if node1_label:
                         processed_label = sanitize_label(
                             sanitized_node1_id, node1_label
@@ -207,7 +207,7 @@ def convert_tsv_to_rdf_gzip(
                         f'_:{sanitized_node2_id} <id> "{escape_string(node2_id)}" .'
                     )
 
-                    node2_label = row[5] or ""
+                    node2_label = row[5] if len(row) > 5 else None
                     if node2_label:
                         processed_label = sanitize_label(
                             sanitized_node2_id, node2_label
@@ -233,7 +233,10 @@ def convert_tsv_to_rdf_gzip(
                 rel_key = f"{node1_id}-{relation}-{node2_id}"
                 if rel_key not in relationships:
                     relationships.add(rel_key)
-                    relation_label = escape_string(row[6] or "")
+                    try:
+                        relation_label = escape_string(row[6] or "")
+                    except Exception as e:
+                        relation_label = "label_not_found"
                     batch.append(
                         f'_:{sanitized_node1_id} <to> _:{sanitized_node2_id} (id="{escape_string(relation)}", label="{relation_label}") .'
                     )
