@@ -4,7 +4,8 @@ import re
 from measure_time import measure_time
 from functools import lru_cache
 import unicodedata
-
+import base64
+import hashlib
 
 csv.field_size_limit(2**31 - 1)
 
@@ -33,8 +34,18 @@ def sanitize_id(id_string):
         return ""
 
     normalized = unicodedata.normalize("NFKD", id_string)
-    sanitized = re.sub(r"[^\w]", "_", normalized, flags=re.ASCII)
-    return sanitized
+
+    if re.search(r"[^\x00-\x7F]|[^\w]", normalized):
+        prefix = re.sub(r"[^\w]", "", re.sub(r"[^\x00-\x7F]", "", normalized))[:8]
+        if not prefix:
+            prefix = "id"
+
+        hash_obj = hashlib.md5(id_string.encode("utf-8"))
+        hash_digest = base64.b32encode(hash_obj.digest()).decode("ascii")[:12]
+
+        return f"{prefix}_{hash_digest}"
+    else:
+        return normalized
 
 
 def sanitize_label(node_id, label):
