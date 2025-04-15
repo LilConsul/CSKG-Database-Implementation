@@ -9,7 +9,60 @@ from similar_nodes import get_similar_nodes
 from utils import dgraph_read, dgraph_write
 
 
-@click.group()
+class AliasedGroup(click.Group):
+    def get_command(self, ctx, cmd_name):
+        rv = click.Group.get_command(self, ctx, cmd_name)
+        if rv is not None:
+            return rv
+
+        # Check if cmd_name is an alias
+        for name, cmd in self.commands.items():
+            if hasattr(cmd, "aliases") and cmd_name in cmd.aliases:
+                return cmd
+        return None
+
+    def format_commands(self, ctx, formatter):
+        commands = []
+
+        for subcommand in self.list_commands(ctx):
+            cmd = self.get_command(ctx, subcommand)
+            if cmd is None:
+                continue
+            if cmd.hidden:
+                continue
+
+            # Add aliases to the command help text
+            help_text = cmd.help
+            if hasattr(cmd, "aliases") and cmd.aliases:
+                aliases_str = ", ".join(cmd.aliases)
+                help_text = f"{help_text} (alias: {aliases_str})"
+
+            commands.append((subcommand, help_text))
+
+        # Add commands in help listing
+        if commands:
+            formatter.width = 120
+            limit = formatter.width - 6 - max(len(cmd[0]) for cmd in commands)
+            rows = []
+            for subcommand, help_text in commands:
+                rows.append((subcommand, help_text))
+
+            formatter.section("Commands")
+            formatter.write_dl(rows)
+
+
+def add_aliases(cmd, aliases):
+    """Add aliases to a command"""
+    if not hasattr(cmd, "aliases"):
+        cmd.aliases = []
+    if isinstance(aliases, str):
+        cmd.aliases.append(aliases)
+    else:
+        cmd.aliases.extend(aliases)
+    return cmd
+
+
+@click.group(cls=AliasedGroup)
 @click.option("--verbose", is_flag=True, help="Enable verbose output")
 @click.pass_context
 def cli(ctx, verbose):
@@ -110,9 +163,7 @@ def find_nodes_most_neighbors():
 
         result = {"nodes_with_most_neighbors": nodes_with_max}
         json_print(result)
-        click.echo(
-            f"Found {len(nodes_with_max)} nodes with {max_neighbors} neighbors"
-        )
+        click.echo(f"Found {len(nodes_with_max)} nodes with {max_neighbors} neighbors")
         verbose_print(f"Query executed in {time_end - time_start:.2f} seconds")
 
     except Exception as error:
@@ -198,120 +249,131 @@ cli.add_command(cleanup)
 cli.add_command(run)
 cli.add_command(stop)
 
-cli.add_command(
-    query_one_arg(
-        name="find-successors",
-        query=queries.SUCCESSORS_QUERY,
-        help_text="Find all successors of a given node.",
-        err_text="Failed to find successors for node",
-    )
+# Add query commands with aliases
+find_successors_cmd = query_one_arg(
+    name="find-successors",
+    query=queries.SUCCESSORS_QUERY,
+    help_text="Find all successors of a given node.",
+    err_text="Failed to find successors for node",
 )
+add_aliases(find_successors_cmd, "1")
+cli.add_command(find_successors_cmd)
 
-cli.add_command(
-    query_one_arg(
-        name="count-successors",
-        query=queries.COUNT_SUCCESSORS_QUERY,
-        help_text="Count all successors of a given node.",
-        err_text="Failed to count successors for node",
-    )
+count_successors_cmd = query_one_arg(
+    name="count-successors",
+    query=queries.COUNT_SUCCESSORS_QUERY,
+    help_text="Count all successors of a given node.",
+    err_text="Failed to count successors for node",
 )
+add_aliases(count_successors_cmd, "2")
+cli.add_command(count_successors_cmd)
 
-cli.add_command(
-    query_one_arg(
-        name="find-predecessors",
-        query=queries.PREDECESSORS_QUERY,
-        help_text="Find all predecessors of a given node.",
-        err_text="Failed to find predecessors for node",
-    )
+find_predecessors_cmd = query_one_arg(
+    name="find-predecessors",
+    query=queries.PREDECESSORS_QUERY,
+    help_text="Find all predecessors of a given node.",
+    err_text="Failed to find predecessors for node",
 )
+add_aliases(find_predecessors_cmd, "3")
+cli.add_command(find_predecessors_cmd)
 
-cli.add_command(
-    query_one_arg(
-        name="count-predecessors",
-        query=queries.COUNT_PREDECESSORS_QUERY,
-        help_text="Count all predecessors of a given node.",
-        err_text="Failed to count predecessors for node",
-    )
+count_predecessors_cmd = query_one_arg(
+    name="count-predecessors",
+    query=queries.COUNT_PREDECESSORS_QUERY,
+    help_text="Count all predecessors of a given node.",
+    err_text="Failed to count predecessors for node",
 )
+add_aliases(count_predecessors_cmd, "4")
+cli.add_command(count_predecessors_cmd)
 
-cli.add_command(
-    query_one_arg(
-        name="find-neighbors",
-        query=queries.NEIGHBORS_QUERY,
-        help_text="Find all neighbors of a given node.",
-        err_text="Failed to find neighbors for node",
-    )
+find_neighbors_cmd = query_one_arg(
+    name="find-neighbors",
+    query=queries.NEIGHBORS_QUERY,
+    help_text="Find all neighbors of a given node.",
+    err_text="Failed to find neighbors for node",
 )
+add_aliases(find_neighbors_cmd, "5")
+cli.add_command(find_neighbors_cmd)
 
-cli.add_command(
-    query_one_arg(
-        name="count-neighbors",
-        query=queries.COUNT_NEIGHBORS_QUERY,
-        help_text="Count all neighbors of a given node.",
-        err_text="Failed to count neighbors for node",
-    )
+count_neighbors_cmd = query_one_arg(
+    name="count-neighbors",
+    query=queries.COUNT_NEIGHBORS_QUERY,
+    help_text="Count all neighbors of a given node.",
+    err_text="Failed to count neighbors for node",
 )
+add_aliases(count_neighbors_cmd, "6")
+cli.add_command(count_neighbors_cmd)
 
-cli.add_command(
-    query_one_arg(
-        name="find-grandchildren",
-        query=queries.GRANDCHILDREN_QUERY,
-        help_text="Find all grandchildren (successors of successors) of a given node.",
-        err_text="Failed to find grandchildren for node",
-    )
+find_grandchildren_cmd = query_one_arg(
+    name="find-grandchildren",
+    query=queries.GRANDCHILDREN_QUERY,
+    help_text="Find all grandchildren (successors of successors) of a given node.",
+    err_text="Failed to find grandchildren for node",
 )
+add_aliases(find_grandchildren_cmd, "7")
+cli.add_command(find_grandchildren_cmd)
 
-cli.add_command(
-    query_one_arg(
-        name="find-grandparents",
-        query=queries.GRANDPARENTS_QUERY,
-        help_text="Find all grandparents (predecessors of predecessors) of a given node.",
-        err_text="Failed to find grandparents for node",
-    )
+find_grandparents_cmd = query_one_arg(
+    name="find-grandparents",
+    query=queries.GRANDPARENTS_QUERY,
+    help_text="Find all grandparents (predecessors of predecessors) of a given node.",
+    err_text="Failed to find grandparents for node",
 )
+add_aliases(find_grandparents_cmd, "8")
+cli.add_command(find_grandparents_cmd)
 
-# Replace these individual commands with query_no_arg calls
-cli.add_command(
-    query_no_arg(
-        name="count-nodes",
-        query=queries.TOTAL_NODES_QUERY,
-        help_text="Count how many nodes there are.",
-        err_text="counting total nodes",
-    )
+count_nodes_cmd = query_no_arg(
+    name="count-nodes",
+    query=queries.TOTAL_NODES_QUERY,
+    help_text="Count how many nodes there are.",
+    err_text="counting total nodes",
 )
+add_aliases(count_nodes_cmd, "9")
+cli.add_command(count_nodes_cmd)
 
-cli.add_command(
-    query_no_arg(
-        name="count-nodes-no-successors",
-        query=queries.NODES_NO_SUCCESSORS_QUERY,
-        help_text="Count nodes which do not have any successors.",
-        err_text="counting nodes without successors",
-    )
+count_nodes_no_successors_cmd = query_no_arg(
+    name="count-nodes-no-successors",
+    query=queries.NODES_NO_SUCCESSORS_QUERY,
+    help_text="Count nodes which do not have any successors.",
+    err_text="counting nodes without successors",
 )
+add_aliases(count_nodes_no_successors_cmd, "10")
+cli.add_command(count_nodes_no_successors_cmd)
 
-cli.add_command(
-    query_no_arg(
-        name="count-nodes-no-predecessors",
-        query=queries.NODES_NO_PREDECESSORS_QUERY,
-        help_text="Count nodes which do not have any predecessors.",
-        err_text="counting nodes without predecessors",
-    )
+count_nodes_no_predecessors_cmd = query_no_arg(
+    name="count-nodes-no-predecessors",
+    query=queries.NODES_NO_PREDECESSORS_QUERY,
+    help_text="Count nodes which do not have any predecessors.",
+    err_text="counting nodes without predecessors",
 )
+add_aliases(count_nodes_no_predecessors_cmd, "11")
+cli.add_command(count_nodes_no_predecessors_cmd)
 
-cli.add_command(
-    query_no_arg(
-        name="count-nodes-single-neighbor",
-        query=queries.NODES_SINGLE_NEIGHBOR_QUERY,
-        help_text="Count nodes with a single neighbor.",
-        err_text="counting nodes with a single neighbor",
-    )
-)
-
+add_aliases(find_nodes_most_neighbors, "12")
 cli.add_command(find_nodes_most_neighbors)
+
+count_nodes_single_neighbor_cmd = query_no_arg(
+    name="count-nodes-single-neighbor",
+    query=queries.NODES_SINGLE_NEIGHBOR_QUERY,
+    help_text="Count nodes with a single neighbor.",
+    err_text="counting nodes with a single neighbor",
+)
+add_aliases(count_nodes_single_neighbor_cmd, "13")
+cli.add_command(count_nodes_single_neighbor_cmd)
+
+add_aliases(rename_node, "14")
 cli.add_command(rename_node)
+
+add_aliases(find_similar_nodes, "15")
 cli.add_command(find_similar_nodes)
+
+add_aliases(find_shortest_path, "16")
 cli.add_command(find_shortest_path)
+
+add_aliases(find_distant_synonyms, "17")
 cli.add_command(find_distant_synonyms)
+
+add_aliases(find_distant_antonyms, "18")
 cli.add_command(find_distant_antonyms)
 
 if __name__ == "__main__":
