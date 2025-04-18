@@ -163,7 +163,7 @@ def find_nodes_most_neighbors():
 
         result = {"nodes_with_most_neighbors": nodes_with_max}
         json_print(result)
-        click.echo(f"Found {len(nodes_with_max)} nodes with {max_neighbors} neighbors")
+        verbose_print(f"Found {len(nodes_with_max)} nodes with {max_neighbors} neighbors")
         verbose_print(f"Query executed in {time_end - time_start:.2f} seconds")
 
     except Exception as error:
