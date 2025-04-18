@@ -175,7 +175,6 @@ def convert_tsv_to_rdf_gzip(
                         pbar.update(1)
                     continue
 
-                # Get sanitized IDs with fast lookups
                 if node1_id not in id_mapping:
                     id_mapping[node1_id] = sanitize_id(node1_id)
                 sanitized_node1_id = id_mapping[node1_id]
@@ -184,10 +183,13 @@ def convert_tsv_to_rdf_gzip(
                     id_mapping[node2_id] = sanitize_id(node2_id)
                 sanitized_node2_id = id_mapping[node2_id]
 
+                uid1 = f"<uid_{sanitized_node1_id}>"
+                uid2 = f"<uid_{sanitized_node2_id}>"
+
                 if node1_id not in nodes:
                     nodes.add(node1_id)
                     batch.append(
-                        f'_:{sanitized_node1_id} <id> "{escape_string(node1_id)}" .'
+                        f'{uid1} <id> "{escape_string(node1_id)}" .'
                     )
 
                     node1_label = row[4] if len(row) > 4 else None
@@ -197,7 +199,7 @@ def convert_tsv_to_rdf_gzip(
                         )
                         if processed_label:
                             batch.append(
-                                f'_:{sanitized_node1_id} <label> "{escape_string(processed_label)}" .'
+                                f'{uid1} <label> "{escape_string(processed_label)}" .'
                             )
                         else:
                             nodes_without_labels.add(node1_id)
@@ -208,14 +210,14 @@ def convert_tsv_to_rdf_gzip(
                     processed_label = sanitize_label(sanitized_node1_id, row[4])
                     if processed_label:
                         batch.append(
-                            f'_:{sanitized_node1_id} <label> "{escape_string(processed_label)}" .'
+                            f'{uid1} <label> "{escape_string(processed_label)}" .'
                         )
                         nodes_without_labels.remove(node1_id)
 
                 if node2_id not in nodes:
                     nodes.add(node2_id)
                     batch.append(
-                        f'_:{sanitized_node2_id} <id> "{escape_string(node2_id)}" .'
+                        f'{uid2} <id> "{escape_string(node2_id)}" .'
                     )
 
                     node2_label = row[5] if len(row) > 5 else None
@@ -225,7 +227,7 @@ def convert_tsv_to_rdf_gzip(
                         )
                         if processed_label:
                             batch.append(
-                                f'_:{sanitized_node2_id} <label> "{escape_string(processed_label)}" .'
+                                f'{uid2} <label> "{escape_string(processed_label)}" .'
                             )
                         else:
                             nodes_without_labels.add(node2_id)
@@ -236,11 +238,10 @@ def convert_tsv_to_rdf_gzip(
                     processed_label = sanitize_label(sanitized_node2_id, row[5])
                     if processed_label:
                         batch.append(
-                            f'_:{sanitized_node2_id} <label> "{escape_string(processed_label)}" .'
+                            f'{uid2} <label> "{escape_string(processed_label)}" .'
                         )
                         nodes_without_labels.remove(node2_id)
 
-                # Process relationships
                 rel_key = f"{node1_id}-{relation}-{node2_id}"
                 if rel_key not in relationships:
                     relationships.add(rel_key)
@@ -249,7 +250,7 @@ def convert_tsv_to_rdf_gzip(
                     except Exception as e:
                         relation_label = "label_not_found"
                     batch.append(
-                        f'_:{sanitized_node1_id} <to> _:{sanitized_node2_id} (id="{escape_string(relation)}", label="{relation_label}") .'
+                        f'{uid1} <to> {uid2} (id="{escape_string(relation)}", label="{relation_label}") .'
                     )
 
                 count += 1
