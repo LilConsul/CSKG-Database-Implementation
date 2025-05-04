@@ -59,11 +59,15 @@ cd 19-shevchenko-denys-karabanov-yehor
 id: string @unique @index(hash) .
 label: string @index(term) .
 to: [uid] @reverse @facet(id, label) .
+synonym: [uid] @reverse .
+antonym: [uid] @reverse .
 
 type Node {
     id
     label
     to
+    synonym
+    antonym
 }
 ```
 
@@ -98,7 +102,7 @@ _:_c_en_empty_set <id> "/c/en/empty_set" .
 _:_c_en_empty_set <label> "empty set" .
 
 # Edge: 0 defined as Empty Set (with facets)
-_:_c_en_0 <to> _:_c_en_empty_set (id="/r/DefinedAs", label="defined as") .
+_:_c_en_0 <to> _:_c_en_empty_set (id="/r/DefinedAs<;>/r/Synonym", label="defined as<;>synonym") .
 ```
 
 ### Data Example Visualization
@@ -186,7 +190,10 @@ System can find all simillar nodes, that share the same parent or child with the
       "shared_connections": [
         {
           "via_node": "/c/en/empty_set",
-          "edge_type": "/r/DefinedAs"
+          "edge_type": [
+            "/r/RelatedTo",
+            "/r/UsedFor"
+          ]
         },
         {
           "via_node": "/c/en/set_containing_one_element",
