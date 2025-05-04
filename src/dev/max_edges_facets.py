@@ -1,8 +1,8 @@
 import gzip
 from collections import defaultdict
 
-# Count how many <;> separators each relation id has
-relation_separator_counts = defaultdict(int)
+# Map from node → list of (relation_id_or_label, <;> count)
+node_relations = defaultdict(list)
 
 with gzip.open("../../data/data.rdf.gz", "rt", encoding="utf-8") as f:
     for line in f:
@@ -10,9 +10,9 @@ with gzip.open("../../data/data.rdf.gz", "rt", encoding="utf-8") as f:
             continue  # Skip lines with no facets
 
         parts = line.strip().split("(", 1)
+        triple = parts[0].strip()  # RDF triple like _:x <to> _:y
         facet_part = parts[1].rsplit(")", 1)[0]
 
-        # Look for id="..." or label="..."
         for key in ("id=", "label="):
             start = facet_part.find(key)
             if start != -1:
@@ -24,12 +24,17 @@ with gzip.open("../../data/data.rdf.gz", "rt", encoding="utf-8") as f:
                         value = facet_part[start + 1:end]
                         count = value.count("<;>")
                         if count > 0:
-                            relation_separator_counts[value] = count
+                            node_relations[triple].append((value, count))
                 break  # Prefer id= over label= if both present
 
-# Sort and print the relation values with most <;>
-sorted_relations = sorted(relation_separator_counts.items(), key=lambda x: -x[1])
+# Flatten results and sort by number of <;> separators
+flat = []
+for node, entries in node_relations.items():
+    for value, count in entries:
+        flat.append((node, value, count))
 
-print("Top relations by number of <;> separators:")
-for value, count in sorted_relations[:10]:
-    print(f"{value} → {count} <;> separators")
+sorted_results = sorted(flat, key=lambda x: -x[2])
+
+print("Top node + relation values by number of <;> separators:")
+for node, value, count in sorted_results[:10]:
+    print(f"Node: {node}\n  Relation ID/Label: {value} → {count} <;> separators\n")

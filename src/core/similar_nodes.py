@@ -6,6 +6,33 @@ from .queries import SIMILAR_NODES_QUERY
 from .utils import dgraph_read
 
 
+def edge_types_match(edge_type1, edge_type2):
+    """
+    Check if edge types match, handling both string and list values.
+
+    Returns True if:
+    - Both are strings and are equal
+    - Both are lists and have at least one common element
+    - One is string, one is list, and the string is in the list
+    """
+    # Both are strings
+    if isinstance(edge_type1, str) and isinstance(edge_type2, str):
+        return edge_type1 == edge_type2
+
+    # Both are lists
+    elif isinstance(edge_type1, list) and isinstance(edge_type2, list):
+        return any(elem in edge_type2 for elem in edge_type1)
+
+    # One string, one list
+    elif isinstance(edge_type1, str) and isinstance(edge_type2, list):
+        return edge_type1 in edge_type2
+
+    elif isinstance(edge_type1, list) and isinstance(edge_type2, str):
+        return edge_type2 in edge_type1
+
+    return False
+
+
 def fetch_node_data(node_id):
     """Fetch node data from the database."""
     results = dgraph_read(
@@ -36,9 +63,8 @@ def find_similar_nodes_via_successors(node, similar_nodes):
             sub_predecessor_id = sub_predecessor.get("id")
             edge_type_sub = sub_predecessor.get("~to|id")
 
-            if (
-                sub_predecessor_id != node_id
-                and edge_type_to_successor == edge_type_sub
+            if sub_predecessor_id != node_id and edge_types_match(
+                edge_type_to_successor, edge_type_sub
             ):
                 add_to_similar_nodes(
                     similar_nodes,
@@ -64,9 +90,8 @@ def find_similar_nodes_via_predecessors(node, similar_nodes):
             sub_successor_id = sub_successor.get("id")
             edge_type_sub = sub_successor.get("to|id")
 
-            if (
-                sub_successor_id != node_id
-                and edge_type_from_predecessor == edge_type_sub
+            if sub_successor_id != node_id and edge_types_match(
+                edge_type_from_predecessor, edge_type_sub
             ):
                 add_to_similar_nodes(
                     similar_nodes,

@@ -1,7 +1,7 @@
 import json
 import os
 from contextlib import contextmanager
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Optional
 
 import click
 import pydgraph
