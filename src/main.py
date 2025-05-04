@@ -2,11 +2,11 @@ import time
 
 import click
 
-import queries
-from distant_nodes import find_distant_relationships
-from message_handler import error_print, json_print, verbose_print
-from similar_nodes import get_similar_nodes
-from utils import dgraph_read, dgraph_write
+from core import queries
+from core.distant_nodes import find_distant_relationships
+from core.message_handler import error_print, json_print, verbose_print
+from core.similar_nodes import get_similar_nodes
+from core.utils import dgraph_read, dgraph_write
 
 
 class AliasedGroup(click.Group):

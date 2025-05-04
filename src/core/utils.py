@@ -86,7 +86,6 @@ def dgraph_read(
             try:
                 response = txn.query(query, variables=variables)
                 result = json.loads(response.json)
-
                 # Process the combined values (with <;> separators) into lists
                 processed_result = process_combined_values(result)
 

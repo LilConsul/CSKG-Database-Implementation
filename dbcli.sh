@@ -71,7 +71,7 @@ cleanup() {
   echo "Docker cleaned. Removing directories..."
 
   delete_dir "$STORAGE_DIR"
-  delete_dir "$DIR"
+#  delete_dir "$DIR"
 
   echo "Cleanup completed"
 }

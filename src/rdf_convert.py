@@ -1,10 +1,12 @@
+import base64
 import csv
 import gzip
+import hashlib
 import re
-from measure_time import measure_time
-from functools import lru_cache
 import unicodedata
+from functools import lru_cache
 
+from core.measure_time import measure_time
 
 csv.field_size_limit(2**31 - 1)
 
@@ -27,14 +29,40 @@ def escape_string(s):
     return result
 
 
+# @lru_cache(maxsize=4096)
+# def sanitize_id(id_string):
+#     if not id_string:
+#         return ""
+#
+#     normalized = unicodedata.normalize("NFKD", id_string)
+#
+#     # Replace non-word characters with their Unicode code point with delimiters
+#     def replacer(match):
+#         char = match.group(0)
+#         return f"_U{ord(char):04X}_"
+#
+#     sanitized = re.sub(r"[^\w]", replacer, normalized, flags=re.UNICODE)
+#     return sanitized
+
+
 @lru_cache(maxsize=4096)
 def sanitize_id(id_string):
     if not id_string:
         return ""
 
     normalized = unicodedata.normalize("NFKD", id_string)
-    sanitized = re.sub(r"[^\w]", "_", normalized, flags=re.UNICODE)
-    return sanitized
+
+    if re.search(r"[^\x00-\x7F]|[^\w]", normalized):
+        prefix = re.sub(r"[^\w]", "", re.sub(r"[^\x00-\x7F]", "", normalized))[:8]
+        if not prefix:
+            prefix = "id"
+
+        hash_obj = hashlib.md5(id_string.encode("utf-8"))
+        hash_digest = base64.b32encode(hash_obj.digest()).decode("ascii")[:12]
+
+        return f"{prefix}_{hash_digest}"
+    else:
+        return normalized
 
 
 def sanitize_label(node_id, label):
@@ -134,6 +162,8 @@ def convert_tsv_to_rdf_gzip(
 
     nodes = set()
     node_relationships = {}  # Key: (node1_id, node2_id), Value: list of (relation_id, relation_label) tuples
+    # Keep track of all processed node pairs to avoid duplicate edges
+    processed_node_pairs = set()
     nodes_without_labels = set()
     id_mapping = {}
     sanitized_to_original = {}  # Mapping from sanitized ID to original ID
@@ -271,8 +301,15 @@ def convert_tsv_to_rdf_gzip(
                     print(f"Processed {count:,} records...")
 
                 if count % batch_size == 0:
-                    # Process relationships for this batch
-                    process_relationships(node_relationships, batch)
+                    # Process relationships for this batch, but only those not already processed
+                    new_relationships = {
+                        k: v
+                        for k, v in node_relationships.items()
+                        if k not in processed_node_pairs
+                    }
+                    process_relationships(new_relationships, batch)
+                    # Add processed pairs to our tracking set
+                    processed_node_pairs.update(new_relationships.keys())
                     node_relationships.clear()
 
                     # Process the batch
@@ -283,7 +320,11 @@ def convert_tsv_to_rdf_gzip(
             if use_tqdm:
                 pbar.close()
 
-        process_relationships(node_relationships, batch)
+        # Process remaining relationships that haven't been processed yet
+        new_relationships = {
+            k: v for k, v in node_relationships.items() if k not in processed_node_pairs
+        }
+        process_relationships(new_relationships, batch)
 
         for node_id in nodes_without_labels:
             sanitized_id = id_mapping[node_id]

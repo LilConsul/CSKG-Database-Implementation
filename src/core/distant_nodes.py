@@ -1,8 +1,9 @@
-from collections import deque
 import time
-from message_handler import error_print, verbose_print, json_print
-from utils import dgraph_read
-from queries import DISTANT_SYNONYMS_ANTONYM
+from collections import deque
+
+from .message_handler import error_print, json_print, verbose_print
+from .queries import DISTANT_SYNONYMS_ANTONYM
+from .utils import dgraph_read
 
 
 def dgraph_query(node_id, distance):

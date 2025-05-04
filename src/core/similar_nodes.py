@@ -1,7 +1,9 @@
 import time
-from message_handler import error_print, verbose_print, json_print
-from utils import dgraph_read
-from queries import SIMILAR_NODES_QUERY
+
+from core.message_handler import error_print, json_print, verbose_print
+
+from .queries import SIMILAR_NODES_QUERY
+from .utils import dgraph_read
 
 
 def fetch_node_data(node_id):
