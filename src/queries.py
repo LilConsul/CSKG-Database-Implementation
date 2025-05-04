@@ -202,10 +202,10 @@ query disantSynonymsAndAntonyms($id: string, $distance: int) {
   distant_nodes(func: eq(id, $id)) @recurse(depth: $distance, loop: false) {
     id
     label
-    synonym: to @facets(eq(id, "/r/Synonym"))
-    synonym~: ~to @facets(eq(id, "/r/Synonym"))
-    antonym: to @facets(eq(id, "/r/Antonym"))
-    antonym~: ~to @facets(eq(id, "/r/Antonym"))
+    synonym: synonym 
+    synonym~: ~synonym 
+    antonym: antonym 
+    antonym~: ~antonym 
   }
 }
 """

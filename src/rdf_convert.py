@@ -106,6 +106,18 @@ def count_lines_in_file(input_file):
     return valid_lines
 
 
+def create_default_label(node_id):
+    """Create a default label from the node ID when no label is available"""
+    # Extract meaningful parts from the ID
+    parts = re.split(r"[_\-:/]", node_id)
+    # Filter out empty parts and take the last non-empty part
+    # If none are suitable, use the original ID
+    for part in reversed(parts):
+        if part and len(part) > 1:
+            return part
+    return node_id
+
+
 @measure_time
 def convert_tsv_to_rdf_gzip(
     input_file, output_file, batch_size=250_000, *, total_lines=None
@@ -121,9 +133,10 @@ def convert_tsv_to_rdf_gzip(
     print(f"Converting {input_file} to RDF format...")
 
     nodes = set()
-    relationships = set()
+    node_relationships = {}  # Key: (node1_id, node2_id), Value: list of (relation_id, relation_label) tuples
     nodes_without_labels = set()
     id_mapping = {}
+    sanitized_to_original = {}  # Mapping from sanitized ID to original ID
 
     def process_batch(batch, rdf_file):
         if batch:
@@ -166,11 +179,15 @@ def convert_tsv_to_rdf_gzip(
 
                 # Get sanitized IDs with fast lookups
                 if node1_id not in id_mapping:
-                    id_mapping[node1_id] = sanitize_id(node1_id)
+                    sanitized_id = sanitize_id(node1_id)
+                    id_mapping[node1_id] = sanitized_id
+                    sanitized_to_original[sanitized_id] = node1_id
                 sanitized_node1_id = id_mapping[node1_id]
 
                 if node2_id not in id_mapping:
-                    id_mapping[node2_id] = sanitize_id(node2_id)
+                    sanitized_id = sanitize_id(node2_id)
+                    id_mapping[node2_id] = sanitized_id
+                    sanitized_to_original[sanitized_id] = node2_id
                 sanitized_node2_id = id_mapping[node2_id]
 
                 if node1_id not in nodes:
@@ -229,42 +246,89 @@ def convert_tsv_to_rdf_gzip(
                         )
                         nodes_without_labels.remove(node2_id)
 
-                # Process relationships
-                rel_key = f"{node1_id}-{relation}-{node2_id}"
-                if rel_key not in relationships:
-                    relationships.add(rel_key)
-                    try:
-                        relation_label = escape_string(row[6] or "")
-                    except Exception as e:
-                        relation_label = "label_not_found"
-                    batch.append(
-                        f'_:{sanitized_node1_id} <to> _:{sanitized_node2_id} (id="{escape_string(relation)}", label="{relation_label}") .'
-                    )
+                try:
+                    relation_label = row[6] if len(row) > 6 and row[6] else ""
+                except Exception:
+                    relation_label = ""
+
+                node_pair = (sanitized_node1_id, sanitized_node2_id)
+                if node_pair not in node_relationships:
+                    node_relationships[node_pair] = []
+
+                node_relationships[node_pair].append((relation, relation_label))
 
                 count += 1
                 if use_tqdm:
                     pbar.update(1)
                     if count % 10000 == 0:
                         pbar.set_postfix(
-                            {"Nodes": len(nodes), "Relationships": len(relationships)}
+                            {
+                                "Nodes": len(nodes),
+                                "Relationship Pairs": len(node_relationships),
+                            }
                         )
                 elif count % progress_interval == 0:
                     print(f"Processed {count:,} records...")
 
                 if count % batch_size == 0:
+                    # Process relationships for this batch
+                    process_relationships(node_relationships, batch)
+                    node_relationships.clear()
+
+                    # Process the batch
                     process_batch(batch, rdf_file)
                     if not use_tqdm:
-                        print(
-                            f"Processed {count:,} records. Nodes: {len(nodes):,}, Relationships: {len(relationships):,}"
-                        )
+                        print(f"Processed {count:,} records. Nodes: {len(nodes):,}")
 
             if use_tqdm:
                 pbar.close()
 
+        process_relationships(node_relationships, batch)
+
+        for node_id in nodes_without_labels:
+            sanitized_id = id_mapping[node_id]
+            # Create a default label based on the node ID
+            default_label = create_default_label(node_id)
+            batch.append(f'_:{sanitized_id} <label> "{escape_string(default_label)}" .')
+
         process_batch(batch, rdf_file)
-        print(
-            f"Finished processing {count:,} records. Generated {len(nodes):,} nodes and {len(relationships):,} relationships."
-        )
+        print(f"Finished processing {count:,} records. Generated {len(nodes):,} nodes.")
+
+
+def process_relationships(node_relationships, batch):
+    """Process relationships and combine multiple edges between the same nodes."""
+    total_relationships = 0
+
+    for (node1_id, node2_id), relations in node_relationships.items():
+        total_relationships += 1
+        combined_ids = []
+        combined_labels = []
+
+        for relation, relation_label in relations:
+            combined_ids.append(escape_string(relation))
+            combined_labels.append(escape_string(relation_label))
+
+            # Check for synonym/antonym relationships for special handling of distant synonyms and antonyms
+            # Since we are using facets to store the relationship and facets doesnt support indexing we may want to this additional field
+            if "/r/Synonym" in relation:
+                batch.append(f"_:{node1_id} <synonym> _:{node2_id} .")
+
+            if "/r/Antonym" in relation:
+                batch.append(f"_:{node1_id} <antonym> _:{node2_id} .")
+
+        if len(relations) == 1:
+            relation, relation_label = relations[0]
+            batch.append(
+                f'_:{node1_id} <to> _:{node2_id} (id="{escape_string(relation)}", label="{escape_string(relation_label)}") .'
+            )
+        else:
+            combined_id = "<;>".join(combined_ids)
+            combined_label = "<;>".join(combined_labels)
+            batch.append(
+                f'_:{node1_id} <to> _:{node2_id} (id="{combined_id}", label="{combined_label}") .'
+            )
+
+    return total_relationships
 
 
 if __name__ == "__main__":

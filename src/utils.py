@@ -1,7 +1,7 @@
 import json
 import os
 from contextlib import contextmanager
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import click
 import pydgraph
@@ -35,6 +35,38 @@ def dgraph_service(host: Optional[str] = None, port: Optional[int] = None):
         client_stub.close()
 
 
+def process_combined_values(data: Any) -> Any:
+    """
+    Recursively process data to convert <;> separated strings into lists.
+
+    Args:
+        data: The data to process (can be dict, list, or primitive)
+
+    Returns:
+        The processed data with <;> separated strings converted to lists
+    """
+    if isinstance(data, dict):
+        result = {}
+        for key, value in data.items():
+            if isinstance(value, str) and "<;>" in value:
+                if (
+                    key == "id"
+                    or key == "label"
+                    or key.endswith("|id")
+                    or key.endswith("|label")
+                ):
+                    result[key] = value.split("<;>")
+                else:
+                    result[key] = value
+            else:
+                result[key] = process_combined_values(value)
+        return result
+    elif isinstance(data, list):
+        return [process_combined_values(item) for item in data]
+    else:
+        return data
+
+
 def dgraph_read(
     query: str, variables: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
@@ -46,14 +78,19 @@ def dgraph_read(
         variables: Optional variables for the query
 
     Returns:
-        Query results as dictionary
+        Query results as dictionary with <;> separated values converted to queryable lists
     """
     try:
         with dgraph_service() as client:
             txn = client.txn(read_only=True)
             try:
                 response = txn.query(query, variables=variables)
-                return json.loads(response.json)
+                result = json.loads(response.json)
+
+                # Process the combined values (with <;> separators) into lists
+                processed_result = process_combined_values(result)
+
+                return processed_result
             finally:
                 txn.discard()
     except Exception as e:
