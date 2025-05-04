@@ -21,7 +21,7 @@ with gzip.open("../../data/data.rdf.gz", "rt", encoding="utf-8") as f:
                 if quote_char in ('"', "'"):
                     end = facet_part.find(quote_char, start + 1)
                     if end != -1:
-                        value = facet_part[start + 1:end]
+                        value = facet_part[start + 1 : end]
                         count = value.count("<;>")
                         if count > 0:
                             node_relations[triple].append((value, count))
