@@ -85,9 +85,9 @@ def process_relationships(data, current_id, rel_types, is_synonym, graph, nodes_
 
 
 def find_nodes_at_distance(node_id, distance, graph):
-    """Find all nodes at a specific distance, tracking synonym/antonym status."""
+    """Find all nodes at a specific distance, tracking all synonym/antonym possibilities."""
     queue = deque([(node_id, 0, True)])  # node_id, distance, is_synonym
-    visited = {node_id: (0, True)}  # node_id -> (distance, is_synonym)
+    visited = {node_id: (0, {True})}  # node_id -> (distance, {possible relationships})
 
     while queue:
         current_id, curr_dist, is_synonym = queue.popleft()
@@ -96,18 +96,22 @@ def find_nodes_at_distance(node_id, distance, graph):
         if curr_dist >= distance:
             continue
 
-        # Process neighbors
         for neighbor_id, is_synonym_edge in graph.get(current_id, []):
-            # Calculate if neighbor is synonym of root node:
-            # Synonym of synonym is a synonym
-            # Antonym of antonym is a synonym
-            # Synonym of antonym is an antonym
+            # Calculate if neighbor is synonym of root node
             neighbor_is_synonym = is_synonym if is_synonym_edge else not is_synonym
+            next_dist = curr_dist + 1
 
-            # Update if this is a new node or we found a shorter path
-            if neighbor_id not in visited or curr_dist + 1 < visited[neighbor_id][0]:
-                visited[neighbor_id] = (curr_dist + 1, neighbor_is_synonym)
-                queue.append((neighbor_id, curr_dist + 1, neighbor_is_synonym))
+            if neighbor_id not in visited:
+                # First time seeing this node
+                visited[neighbor_id] = (next_dist, {neighbor_is_synonym})
+                queue.append((neighbor_id, next_dist, neighbor_is_synonym))
+            elif next_dist == visited[neighbor_id][0]:
+                # Same distance but possibly different relationship type
+                visited[neighbor_id][1].add(neighbor_is_synonym)
+            elif next_dist < visited[neighbor_id][0]:
+                # Found a shorter path
+                visited[neighbor_id] = (next_dist, {neighbor_is_synonym})
+                queue.append((neighbor_id, next_dist, neighbor_is_synonym))
 
     return visited
 
@@ -115,13 +119,13 @@ def find_nodes_at_distance(node_id, distance, graph):
 def filter_results(visited, nodes_info, distance, node_id, want_synonyms=True):
     """Filter nodes at target distance based on synonym/antonym status."""
     results = []
-    for node, (dist, is_synonym) in visited.items():
+    for node, (dist, is_synonym_set) in visited.items():
         # Skip if not at target distance or it's the original node
         if dist != distance or node == node_id:
             continue
 
-        # Include only synonyms or only antonyms based on want_synonyms
-        if is_synonym == want_synonyms:
+        # Include node if it can have the relationship we want
+        if want_synonyms in is_synonym_set:
             results.append({"id": node, "label": nodes_info.get(node, node)})
 
     return results

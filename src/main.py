@@ -211,7 +211,7 @@ def rename_node(node_id, new_label):
             return
 
         uid = node_info["node"][0]["uid"]
-        mutation = {"set": [{"uid": uid, "label": new_label}]}
+        mutation = {"set": [{"uid": uid, "label": new_label, "id": new_label}]}
         dgraph_write(mutation)
         end_time = time.time()
         json_print(f"Successfully renamed node {node_id} to '{new_label}'")
