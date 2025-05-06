@@ -103,20 +103,13 @@ def find_similar_nodes_via_predecessors(node, similar_nodes):
 
 
 def add_to_similar_nodes(similar_nodes, node_id, label, via_node, edge_type):
-    """Add a node to the similar_nodes dictionary."""
+    """Add a node to the similar_nodes dictionary without tracking shared connections."""
     similar_nodes.setdefault(
         node_id,
         {
             "id": node_id,
             "label": label,
-            "shared_connections": [],
         },
-    )
-    similar_nodes[node_id]["shared_connections"].append(
-        {
-            "via_node": via_node,
-            "edge_type": edge_type,
-        }
     )
 
 

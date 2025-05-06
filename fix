@@ -1,0 +1,7 @@
+5(combine to and ~to), 6 (same but count)
+7 (duplicates)  Q676
+8 (duplicates)
+13 (too many) 1276217
+DONE 14 (rename id and label)
+DONE 15(remove shared_connections)
+18 (should be 17) (socket closed fix, uwu)
