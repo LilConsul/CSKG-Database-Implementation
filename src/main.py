@@ -113,34 +113,19 @@ def find_neighbors(node_id):
         start_time = time.time()
         results = dgraph_read(queries.NEIGHBORS_QUERY, variables={"$id": node_id})
 
-        # Process results to remove duplicates
         if results and "neighbors" in results:
             node_data = results["neighbors"][0]
 
-            # Create dictionaries for successors and predecessors
             successors = {item["id"]: item for item in node_data.get("to", [])}
             predecessors = {item["id"]: item for item in node_data.get("~to", [])}
 
-            # Merge neighbors (predecessors overwrite duplicates in successors)
             all_neighbors = successors.copy()
             for node_id, node in predecessors.items():
-                if node_id in all_neighbors:
-                    # Mark as both successor and predecessor
-                    all_neighbors[node_id]["is_successor"] = True
-                    all_neighbors[node_id]["is_predecessor"] = True
-                else:
-                    node["is_predecessor"] = True
+                if node_id not in all_neighbors:
                     all_neighbors[node_id] = node
 
-            # Mark remaining nodes from successors
-            for node_id, node in all_neighbors.items():
-                if "is_successor" not in node and "is_predecessor" not in node:
-                    all_neighbors[node_id]["is_successor"] = True
-
-            # Replace the original results with deduplicated list
             results["neighbors"][0]["neighbors"] = list(all_neighbors.values())
 
-            # Remove the original separate lists
             if "to" in results["neighbors"][0]:
                 del results["neighbors"][0]["to"]
             if "~to" in results["neighbors"][0]:
