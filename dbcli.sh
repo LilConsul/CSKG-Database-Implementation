@@ -60,14 +60,17 @@ start() {
 }
 
 stop() {
-  echo "Stopping the docker. Please wait..."
-  docker-compose down
+   docker-compose -p dbcli-client stop
 }
 
 cleanup() {
   echo "Executing cleanup function..."
-  docker-compose down -v --remove-orphans
-  docker system prune -f
+  if docker-compose -p dbcli-client ps | grep -q "dbcli"; then
+    # Remove containers, networks, volumes
+    # -rmi local can remove images created by the build process, but no actual need for this for now...
+    docker-compose -p dbcli-client down -v --remove-orphans # --rmi local
+  fi
+
   echo "Docker cleaned. Removing directories..."
 
   delete_dir "$STORAGE_DIR"

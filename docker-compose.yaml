@@ -8,9 +8,9 @@ services:
     ports:
       - "5080:5080"
       - "6080:6080"
-    restart: on-failure
+    restart: unless-stopped
     environment:
-      DGRAPH_ZERO_WHITELIST: "0.0.0.0/0,172.19.0.0/16"
+      DGRAPH_ZERO_WHITELIST: "0.0.0.0/0"
     command: dgraph zero --bindall=true --my=zero:5080 --telemetry="reports=false"
 
   alpha:
@@ -25,7 +25,7 @@ services:
       - "7080:7080"
       - "8080:8080"
       - "9080:9080"
-    restart: on-failure
+    restart: unless-stopped
     environment:
       #                              2^32 = 4294967296
       DGRAPH_ALPHA_LIMIT: "query-edge=4294967296; normalize-node=4294967296; mutations-nquad=1000000"
@@ -38,6 +38,7 @@ services:
     container_name: dgraph_ratel
     ports:
       - "8000:8000"
+    restart: unless-stopped
     command: dgraph-ratel
 
   dbcli:
@@ -56,4 +57,4 @@ services:
       DEBUG: "FALSE"
     stdin_open: true
     tty: true
-    restart: on-failure
+    restart: unless-stopped
