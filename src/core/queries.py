@@ -1,11 +1,9 @@
 SUCCESSORS_QUERY = """
 query getSuccessors($id: string) {
-  successors(func: eq(id, $id)) {
-    id
-    label
+  successors(func: eq(id, $id)) @normalize {
     successors: to {
-      id
-      label
+      id:id
+      label:label
     }
   }
 }
@@ -14,8 +12,6 @@ query getSuccessors($id: string) {
 COUNT_SUCCESSORS_QUERY = """
 query countSuccessors($id: string) {
   successors(func: eq(id, $id)) {
-    id
-    label
     count: count(to)
   }
 }
@@ -23,12 +19,10 @@ query countSuccessors($id: string) {
 
 PREDECESSORS_QUERY = """
 query getPredecessors($id: string) {
-  predecessors(func: eq(id, $id)) {
-    id
-    label
+  predecessors(func: eq(id, $id)) @normalize {
     predecessors: ~to {
-      id
-      label
+      id:id
+      label:label
     }
   }
 }
@@ -37,8 +31,6 @@ query getPredecessors($id: string) {
 COUNT_PREDECESSORS_QUERY = """
 query countPredecessors($id: string) {
   predecessors(func: eq(id, $id)) {
-    id
-    label
     count: count(~to)
   }
 }
@@ -46,14 +38,12 @@ query countPredecessors($id: string) {
 
 NEIGHBORS_QUERY = """
 query getNeighbors($id: string) {
-  neighbors(func: eq(id, $id)) {
-    id
-    label
-    successors: to {
+  neighbors(func: eq(id, $id)){
+    to {
       id
       label
     }
-    predecessors: ~to {
+    ~to {
       id
       label
     }
@@ -64,11 +54,9 @@ query getNeighbors($id: string) {
 COUNT_NEIGHBORS_QUERY = """
 query countNeighbors($id: string) {
   neighbors(func: eq(id, $id)) {
-    id
-    label
     successors_count AS count(to)
     predecessors_count AS count(~to)
-    total_neighbors: math(successors_count + predecessors_count)
+    count: math(successors_count + predecessors_count)
   }
 }
 """

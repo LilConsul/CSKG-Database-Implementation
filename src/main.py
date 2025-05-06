@@ -105,6 +105,59 @@ def stop():
     pass
 
 
+@click.command()
+@click.argument("node_id", required=True)
+def find_neighbors(node_id):
+    """Find all neighbors of a given node."""
+    try:
+        start_time = time.time()
+        results = dgraph_read(queries.NEIGHBORS_QUERY, variables={"$id": node_id})
+
+        # Process results to remove duplicates
+        if results and "neighbors" in results:
+            node_data = results["neighbors"][0]
+
+            # Create dictionaries for successors and predecessors
+            successors = {item["id"]: item for item in node_data.get("to", [])}
+            predecessors = {item["id"]: item for item in node_data.get("~to", [])}
+
+            # Merge neighbors (predecessors overwrite duplicates in successors)
+            all_neighbors = successors.copy()
+            for node_id, node in predecessors.items():
+                if node_id in all_neighbors:
+                    # Mark as both successor and predecessor
+                    all_neighbors[node_id]["is_successor"] = True
+                    all_neighbors[node_id]["is_predecessor"] = True
+                else:
+                    node["is_predecessor"] = True
+                    all_neighbors[node_id] = node
+
+            # Mark remaining nodes from successors
+            for node_id, node in all_neighbors.items():
+                if "is_successor" not in node and "is_predecessor" not in node:
+                    all_neighbors[node_id]["is_successor"] = True
+
+            # Replace the original results with deduplicated list
+            results["neighbors"][0]["neighbors"] = list(all_neighbors.values())
+
+            # Remove the original separate lists
+            if "to" in results["neighbors"][0]:
+                del results["neighbors"][0]["to"]
+            if "~to" in results["neighbors"][0]:
+                del results["neighbors"][0]["~to"]
+
+        end_time = time.time()
+        json_print(results)
+        verbose_print(f"Query executed in {end_time - start_time:.2f} seconds")
+    except Exception as error:
+        error_print("Failed to find neighbors for node", error)
+
+
+# Replace the existing find_neighbors_cmd with this custom implementation
+add_aliases(find_neighbors, "5")
+cli.add_command(find_neighbors)
+
+
 def query_one_arg(name, query, help_text, err_text):
     @click.command(name, help=help_text)
     @click.argument("node_id", required=True)
@@ -304,14 +357,8 @@ count_predecessors_cmd = query_one_arg(
 add_aliases(count_predecessors_cmd, "4")
 cli.add_command(count_predecessors_cmd)
 
-find_neighbors_cmd = query_one_arg(
-    name="find-neighbors",
-    query=queries.NEIGHBORS_QUERY,
-    help_text="Find all neighbors of a given node.",
-    err_text="Failed to find neighbors for node",
-)
-add_aliases(find_neighbors_cmd, "5")
-cli.add_command(find_neighbors_cmd)
+add_aliases(find_neighbors, "5")
+cli.add_command(find_neighbors)
 
 count_neighbors_cmd = query_one_arg(
     name="count-neighbors",

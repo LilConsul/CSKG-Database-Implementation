@@ -1,3 +1,5 @@
+normalize all first queries
+
 5(combine to and ~to to remove duplicates), 6 (same but count)
 7 (duplicates)  Q676
 8 (duplicates)
