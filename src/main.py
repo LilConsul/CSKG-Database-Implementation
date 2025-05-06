@@ -15,7 +15,6 @@ class AliasedGroup(click.Group):
         if rv is not None:
             return rv
 
-        # Check if cmd_name is an alias
         for name, cmd in self.commands.items():
             if hasattr(cmd, "aliases") and cmd_name in cmd.aliases:
                 return cmd
@@ -23,32 +22,44 @@ class AliasedGroup(click.Group):
 
     def format_commands(self, ctx, formatter):
         commands = []
+        docker_commands = []
 
         for subcommand in self.list_commands(ctx):
             cmd = self.get_command(ctx, subcommand)
-            if cmd is None:
-                continue
-            if cmd.hidden:
+            if cmd is None or cmd.hidden:
                 continue
 
-            # Add aliases to the command help text
-            help_text = cmd.help
+            numerical_alias = float("inf")
             if hasattr(cmd, "aliases") and cmd.aliases:
+                for alias in cmd.aliases:
+                    if alias.isdigit():
+                        numerical_alias = int(alias)
+                        break
+
                 aliases_str = ", ".join(cmd.aliases)
-                help_text = f"{help_text} (alias: {aliases_str})"
+                help_text = f"{aliases_str}. {cmd.help}"
+                commands.append((subcommand, help_text, numerical_alias))
+            else:
+                help_text = cmd.help
+                docker_commands.append((subcommand, help_text))
 
-            commands.append((subcommand, help_text))
+        commands.sort(key=lambda x: x[2])
 
-        # Add commands in help listing
-        if commands:
+        if commands or docker_commands:
             formatter.width = 120
-            limit = formatter.width - 6 - max(len(cmd[0]) for cmd in commands)
-            rows = []
-            for subcommand, help_text in commands:
-                rows.append((subcommand, help_text))
 
-            formatter.section("Commands")
-            formatter.write_dl(rows)
+            formatter.write("\nDgraph Operations:\n")
+
+            if commands:
+                rows = [
+                    (subcommand, help_text) for subcommand, help_text, _ in commands
+                ]
+                formatter.write_dl(rows)
+
+            if docker_commands:
+                formatter.write("\n")
+                formatter.write("Docker Operations:\n")
+                formatter.write_dl(docker_commands)
 
 
 def add_aliases(cmd, aliases):
@@ -62,11 +73,16 @@ def add_aliases(cmd, aliases):
     return cmd
 
 
-@click.group(cls=AliasedGroup)
-@click.option("--verbose", is_flag=True, help="Enable verbose output")
+@click.group(cls=AliasedGroup, context_settings={"help_option_names": ["-h", "--help"]})
+@click.option("--verbose", "-v", is_flag=True, help="Enable verbose output.")
 @click.pass_context
 def cli(ctx, verbose):
-    """CLI entry point for Dgraph operations."""
+    """
+    Command-line interface for managing and querying Dgraph knowledge graph operations.
+
+    This CLI provides tools to explore node relationships, query graph structures, modify data,
+    and manage the underlying Docker infrastructure. Use numerical shortcuts (1-18) for faster access.
+    """
     ctx.ensure_object(dict)
     ctx.obj["verbose"] = verbose
 
@@ -208,7 +224,7 @@ def rename_node(node_id, new_label):
 @click.command()
 @click.argument("node_id", required=True)
 def find_similar_nodes(node_id):
-    """Find all 'similar' nodes that share common parents or children via the same edge type."""
+    """Find all 'similar' nodes that share common neigbors via the same edge type."""
     return get_similar_nodes(node_id)
 
 
@@ -379,4 +395,4 @@ add_aliases(find_distant_antonyms, "18")
 cli.add_command(find_distant_antonyms)
 
 if __name__ == "__main__":
-    cli()
+    cli(prog_name="./dbcli.sh")

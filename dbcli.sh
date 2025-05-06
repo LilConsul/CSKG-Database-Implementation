@@ -125,6 +125,31 @@ setup() {
   fi
 }
 
+display_help() {
+  echo "Usage: $0 [COMMAND] [OPTIONS]"
+  echo ""
+  echo "  You see this message because the server is not running."
+  echo "  Please run the script with the 'run' command to start the server."
+  echo ""
+  echo "Commands:"
+  echo "  run [-y]       Setup and start the services. Use -y to auto-confirm prompts."
+  echo "  stop           Stop all running containers"
+  echo "  cleanup        Remove containers, networks, volumes, and cleanup directories"
+  echo "  --help         Display this help message"
+  echo ""
+  echo "Examples:"
+  echo "  $0 run         Setup and start the services with interactive prompts"
+  echo "  $0 run -y      Setup and start the services with automatic confirmation"
+}
+
+
+run_python_command() {
+  # Remove unnecessary lines from the uv logs
+  docker exec -it dbcli_python uv run /code/main.py "$@" 2>&1 \
+    | grep -v "Bytecode compiled" \
+    | grep -v "Installed .* package"
+}
+
 # Main entrypoint logic
 check_docker_running
 
@@ -138,18 +163,26 @@ case "$1" in
   "stop")
     stop
     ;;
-*) # Default case - run the python query script
-    retries=5
-    while [ $retries -gt 0 ]; do
-      if curl -s http://localhost:8080/health | grep -q "healthy"; then
-        docker exec -it dbcli_python uv run /code/main.py "$@" 2>&1 | grep -v "Bytecode compiled"
-        exit 0
-      else
-        echo "Server not ready. Retrying in 5 seconds... ($retries retries left)"
-        retries=$((retries - 1))
-        sleep 5
-      fi
-    done
-    echo "Server not ready after multiple attempts. Try running <$0 run> first..."
+  "--help"|"-h")
+    if curl -s http://localhost:8080/health | grep -q "healthy"; then
+      run_python_command --help
+    else
+      display_help
+    fi
+    ;;
+
+    *)
+      retries=5
+      while [ $retries -gt 0 ]; do
+        if curl -s http://localhost:8080/health | grep -q "healthy"; then
+          run_python_command "$@"
+          exit 0
+        else
+          echo "Server not ready. Retrying in 3 seconds... ($retries retries left)"
+          retries=$((retries - 1))
+          sleep 3
+        fi
+      done
+      echo "Server not ready after multiple attempts. Try running <$0 run> first..."
     ;;
 esac
