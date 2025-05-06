@@ -4,4 +4,6 @@
 13 (too many) 1276217
 DONE 14 (rename id and label)
 DONE 15(remove shared_connections)
-18 (should be 17) (socket closed fix, uwu)
+16 Doesnt work, implement on your onw
+DONE 18 (should be 17)
+18 (socket closed fix, uwu)
