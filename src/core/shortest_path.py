@@ -8,7 +8,6 @@ from core.utils import dgraph_read
 def format_result(result):
     return {"shortest_path": result} if isinstance(result, list) else result
 
-
 def reconstruct_bidirectional_path(
     forward_visited, backward_visited, intersection, node_labels
 ):
