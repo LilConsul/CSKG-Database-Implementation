@@ -6,6 +6,7 @@ from typing import Any, Dict, Optional
 import click
 import pydgraph
 
+from core.message_handler import verbose_print
 from core.queries import IS_EXIST
 
 DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
@@ -141,6 +142,7 @@ def dgraph_write(mutations: Any, commit_now: bool = True) -> Dict[str, Any]:
         if DEBUG:
             click.echo(f"Error executing mutation: {e}", err=True)
         raise
+
 
 def if_exist(node_id: str):
     """

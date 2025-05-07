@@ -1,9 +1,9 @@
 import time
 from collections import deque
 
-from .message_handler import error_print, json_print, verbose_print
+from .message_handler import error_print, json_print, verbose_print, length_print
 from .queries import DISTANT_SYNONYMS_ANTONYM
-from .utils import dgraph_read
+from .utils import dgraph_read, if_exist
 
 
 def dgraph_query(node_id, distance):
@@ -134,17 +134,19 @@ def filter_results(visited, nodes_info, distance, node_id, want_synonyms=True):
 def find_distant_relationships(node_id, distance, want_synonyms=True):
     """Core function to find distant synonyms or antonyms."""
     relationship_type = "synonyms" if want_synonyms else "antonyms"
+    if not if_exist(node_id):
+        error_print(
+            f"distant_{relationship_type}",
+            f"Node {node_id} does not exist in the graph.",
+        )
+    __myname__ = f"distant_{relationship_type}"
 
     try:
-        verbose_print(
-            f"Querying for {relationship_type} of node: {node_id} with distance: {distance}",
-        )
         start_time = time.time()
-
         results = dgraph_query(node_id, distance)
-        if not results:  # Handle case when query returns no results
+        if not results:
             verbose_print(f"No results found for node: {node_id}")
-            return {f"distant_{relationship_type}": []}
+            return {__myname__: []}
 
         graph, nodes_info = build_relationship_graph(results)
 
@@ -155,13 +157,15 @@ def find_distant_relationships(node_id, distance, want_synonyms=True):
         filtered_results = filter_results(
             visited, nodes_info, distance, node_id, want_synonyms
         )
+        end_time = time.time()
 
         # Output results
-        verbose_print(f"Found {len(filtered_results)} distant {relationship_type}")
-        result = {f"distant_{relationship_type}": filtered_results}
-        end_time = time.time()
+        result = {__myname__: filtered_results}
+        length_print(__myname__, result)
         json_print(result)
         verbose_print(f"Query executed in {end_time - start_time:.2f} seconds")
+        return result
 
     except Exception as error:
         error_print(f"finding distant {relationship_type} for {node_id}", error)
+        return None

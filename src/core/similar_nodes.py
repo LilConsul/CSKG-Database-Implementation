@@ -1,9 +1,9 @@
 import time
 
-from core.message_handler import error_print, json_print, verbose_print
+from core.message_handler import error_print, json_print, verbose_print, length_print
 
 from .queries import SIMILAR_NODES_QUERY
-from .utils import dgraph_read
+from .utils import dgraph_read, if_exist
 
 
 def edge_types_match(edge_type1, edge_type2):
@@ -113,17 +113,22 @@ def add_to_similar_nodes(similar_nodes, node_id, label, via_node, edge_type):
     )
 
 
-def format_and_output_results(similar_nodes, start_time):
+def format_and_output_results(similar_nodes, time_taken):
     """Format the results and print them."""
     result = {"similar_nodes": list(similar_nodes.values())}
-    end_time = time.time()
+
+    length_print("get_similar_nodes", result)
     json_print(result)
-    verbose_print(f"Query executed in {end_time - start_time:.2f} seconds")
+    verbose_print(f"Query executed in {time_taken:.2f} seconds")
 
 
 def get_similar_nodes(node_id):
     """Find all 'similar' nodes that share common parents or children via the same edge type."""
     try:
+        if not if_exist(node_id):
+            error_print("get_similar_nodes", f"Node {node_id} does not exist")
+            return
+
         start_time = time.time()
 
         # Fetch node data
@@ -135,9 +140,10 @@ def get_similar_nodes(node_id):
         similar_nodes = {}
         find_similar_nodes_via_successors(node_data, similar_nodes)
         find_similar_nodes_via_predecessors(node_data, similar_nodes)
+        end_time = time.time()
 
         # Format and output results
-        format_and_output_results(similar_nodes, start_time)
+        format_and_output_results(similar_nodes, end_time - start_time)
 
     except Exception as error:
         error_print("finding similar nodes", error)
