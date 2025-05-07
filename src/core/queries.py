@@ -1,21 +1,10 @@
 SUCCESSORS_QUERY = """
-query getSuccessors($id: string) {
-  successors(func: eq(id, $id)) {
-    id
-    label
-    successors: to {
-      id
-      label
-    }
-  }
-}
+
 """
 
 COUNT_SUCCESSORS_QUERY = """
 query countSuccessors($id: string) {
   successors(func: eq(id, $id)) {
-    id
-    label
     count: count(to)
   }
 }
@@ -23,12 +12,17 @@ query countSuccessors($id: string) {
 
 PREDECESSORS_QUERY = """
 query getPredecessors($id: string) {
-  predecessors(func: eq(id, $id)) {
-    id
-    label
+  predecessors(func: eq(id, $id)) @normalize {
     predecessors: ~to {
-      id
-      label
+      id:id
+      label:labelquery getSuccessors($id: string) {
+  successors(func: eq(id, $id)) @normalize {
+    successors: to {
+      id:id
+      label:label
+    }
+  }
+}
     }
   }
 }
@@ -37,8 +31,6 @@ query getPredecessors($id: string) {
 COUNT_PREDECESSORS_QUERY = """
 query countPredecessors($id: string) {
   predecessors(func: eq(id, $id)) {
-    id
-    label
     count: count(~to)
   }
 }
@@ -124,9 +116,12 @@ query countNodesWithoutPredecessors {
 NODES_MOST_NEIGHBORS_QUERY = """
 query nodesWithMostNeighbors($offset: string) {
   var(func: has(id)) {
-    successors_count as count(to)
-    predecessors_count as count(~to)
-    total_neighbors as math(successors_count + predecessors_count)
+    succ as to
+    pred as ~to
+  }
+  
+  var(func: uid(succ, pred)) {
+    total_neighbors as count(uid)
   }
       
   nodes_with_most_neighbors(func: has(id), orderdesc: val(total_neighbors), first: 10, offset: $offset) {
@@ -140,9 +135,12 @@ query nodesWithMostNeighbors($offset: string) {
 NODES_SINGLE_NEIGHBOR_QUERY = """
 query nodesWithSingleNeighbor{
   var(func: has(id)) {
-    successors_count as count(to)
-    predecessors_count as count(~to)
-    total_neighbors as math(successors_count + predecessors_count)
+    succ as to
+    pred as ~to
+  }
+  
+  var(func: uid(succ, pred)) {
+    total_neighbors as count(uid)
   }
 
   nodes_with_single_neighbor(func: has(id))
