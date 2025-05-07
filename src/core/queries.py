@@ -7,7 +7,14 @@ query checkNodeExists($id: string) {
 """
 
 SUCCESSORS_QUERY = """
-
+query getSuccessors($id: string) {
+  successors(func: eq(id, $id)) @normalize {
+    successors: to {
+      id:id
+      label:label
+    }
+  }
+}
 """
 
 COUNT_SUCCESSORS_QUERY = """
@@ -23,14 +30,7 @@ query getPredecessors($id: string) {
   predecessors(func: eq(id, $id)) @normalize {
     predecessors: ~to {
       id:id
-      label:labelquery getSuccessors($id: string) {
-  successors(func: eq(id, $id)) @normalize {
-    successors: to {
-      id:id
       label:label
-    }
-  }
-}
     }
   }
 }

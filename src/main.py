@@ -1,4 +1,5 @@
 import time
+from multiprocessing.util import is_exiting
 
 import click
 
@@ -6,7 +7,7 @@ from core import queries
 from core.distant_nodes import find_distant_relationships
 from core.message_handler import error_print, json_print, verbose_print
 from core.similar_nodes import get_similar_nodes
-from core.utils import dgraph_read, dgraph_write
+from core.utils import dgraph_read, dgraph_write, if_exist
 from core.shortest_path import shortest_path
 
 
@@ -111,9 +112,15 @@ def query_one_arg(name, query, help_text, err_text):
     @click.argument("node_id", required=True)
     def command(node_id):
         try:
+            if not if_exist(node_id):
+                error_print(f"Node with ID {node_id} not found", None)
+                return
+
             time_start = time.time()
             results = dgraph_read(query, variables={"$id": node_id})
             time_end = time.time()
+
+            verbose_print(f"{name} has {len(results.get(list(results.keys())[0], [])) if results else 0} elements")
             json_print(results)
             verbose_print(f"Query executed in {time_end - time_start:.2f} seconds")
         except Exception as error:
