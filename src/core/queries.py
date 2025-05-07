@@ -46,17 +46,14 @@ query countPredecessors($id: string) {
 
 NEIGHBORS_QUERY = """
 query getNeighbors($id: string) {
-  neighbors(func: eq(id, $id)) {
+  var(func: eq(id, $id)) {
+    succ as to
+    pred as ~to
+  }
+  
+  neighbors(func: uid(succ, pred)) {
     id
     label
-    successors: to {
-      id
-      label
-    }
-    predecessors: ~to {
-      id
-      label
-    }
   }
 }
 """
