@@ -1,9 +1,12 @@
 from collections import deque
 
-from core.message_handler import error_print, verbose_print
+from core.message_handler import verbose_print
 from core.queries import NEIGHBORS_QUERY
-from core.utils import dgraph_read, if_exist
+from core.utils import dgraph_read
 
+
+def format_result(result):
+    return {"shortest_path": result} if isinstance(result, list) else result
 
 def reconstruct_bidirectional_path(
     forward_visited, backward_visited, intersection, node_labels
@@ -24,7 +27,7 @@ def reconstruct_bidirectional_path(
         )
         current = backward_visited[current]
 
-    return forward_path + backward_path
+    return format_result(forward_path + backward_path)
 
 
 def shortest_path(id1: str, id2: str):
@@ -34,12 +37,6 @@ def shortest_path(id1: str, id2: str):
 
     if id1 == id2:
         return [{"id": id1, "label": id1}]
-
-    if not if_exist(id1):
-        error_print(shortest_path.__name__, f"Node {id1} does not exist")
-
-    if not if_exist(id2):
-        error_print(shortest_path.__name__, f"Node {id2} does not exist")
 
     forward_queue = deque([id1])
     forward_visited = {id1: None}
@@ -105,15 +102,12 @@ def shortest_path(id1: str, id2: str):
             break
 
     if best_intersection:
-        verbose_print(
-            f"Shortest path found with length {best_path_length + 1} at {best_intersection}"
-        )
         return reconstruct_bidirectional_path(
             forward_visited, backward_visited, best_intersection, node_labels
         )
 
     verbose_print("No path found")
-    return []
+    return format_result([])
 
 
 def process_level(

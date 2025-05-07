@@ -6,6 +6,7 @@ from typing import Any, Dict, Optional
 import click
 import pydgraph
 
+from core.message_handler import verbose_print
 from core.queries import IS_EXIST
 
 DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
