@@ -130,40 +130,24 @@ query countNodesWithoutPredecessors {
 """
 
 NODES_MOST_NEIGHBORS_QUERY = """
-query nodesWithMostNeighbors($offset: string) {
-  var(func: has(id)) {
-    succ as to
-    pred as ~to
+query findNodesWithMostNeighbors {
+  var(func: has(id), orderdesc: unique_neighbors_count, first: 1) {
+    max_val as unique_neighbors_count
   }
-  
-  var(func: uid(succ, pred)) {
-    total_neighbors as count(uid)
-  }
-      
-  nodes_with_most_neighbors(func: has(id), orderdesc: val(total_neighbors), first: 10, offset: $offset) {
-    total_neighbors: val(total_neighbors)
+
+  nodes_with_most_neighbors(func: eq(unique_neighbors_count, val(max_val))) {
     id
     label
+    unique_neighbors_count
   }
 }
 """
 
 NODES_SINGLE_NEIGHBOR_QUERY = """
-query nodesWithSingleNeighbor{
-  var(func: has(id)) {
-    succ as to
-    pred as ~to
+query countNodesWithSingleNeighbor {
+  single_neighbor_count(func: eq(unique_neighbors_count, 1)) {
+    count(uid)
   }
-  
-  var(func: uid(succ, pred)) {
-    total_neighbors as count(uid)
-  }
-
-  nodes_with_single_neighbor(func: has(id))
-      @filter(eq(val(total_neighbors), 1))
-      {
-        amount:count(uid)
-      }
 }
 """
 

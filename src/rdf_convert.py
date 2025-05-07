@@ -162,11 +162,14 @@ def convert_tsv_to_rdf_gzip(
 
     nodes = set()
     node_relationships = {}  # Key: (node1_id, node2_id), Value: list of (relation_id, relation_label) tuples
-    # Keep track of all processed node pairs to avoid duplicate edges
     processed_node_pairs = set()
     nodes_without_labels = set()
     id_mapping = {}
     sanitized_to_original = {}  # Mapping from sanitized ID to original ID
+
+    # Track both outgoing and incoming connections separately
+    outgoing_neighbors = {}  # Key: node_id, Value: set of outgoing neighbor node_ids
+    incoming_neighbors = {}  # Key: node_id, Value: set of incoming neighbor node_ids
 
     def process_batch(batch, rdf_file):
         if batch:
@@ -219,6 +222,16 @@ def convert_tsv_to_rdf_gzip(
                     id_mapping[node2_id] = sanitized_id
                     sanitized_to_original[sanitized_id] = node2_id
                 sanitized_node2_id = id_mapping[node2_id]
+
+                # Track outgoing connections
+                if sanitized_node1_id not in outgoing_neighbors:
+                    outgoing_neighbors[sanitized_node1_id] = set()
+                outgoing_neighbors[sanitized_node1_id].add(sanitized_node2_id)
+
+                # Track incoming connections
+                if sanitized_node2_id not in incoming_neighbors:
+                    incoming_neighbors[sanitized_node2_id] = set()
+                incoming_neighbors[sanitized_node2_id].add(sanitized_node1_id)
 
                 if node1_id not in nodes:
                     nodes.add(node1_id)
@@ -331,6 +344,19 @@ def convert_tsv_to_rdf_gzip(
             # Create a default label based on the node ID
             default_label = create_default_label(node_id)
             batch.append(f'_:{sanitized_id} <label> "{escape_string(default_label)}" .')
+
+        # Get all node IDs that appear in either outgoing or incoming connections
+        # This part of your code correctly counts neighbors
+        all_node_ids = set(outgoing_neighbors.keys()) | set(incoming_neighbors.keys())
+        for node_id in all_node_ids:
+            out_neighbors = outgoing_neighbors.get(node_id, set())
+            in_neighbors = incoming_neighbors.get(node_id, set())
+            total_unique_neighbors = len(
+                out_neighbors | in_neighbors
+            )  # Union of both sets
+            batch.append(
+                f'_:{node_id} <unique_neighbors_count> "{total_unique_neighbors}"^^<xs:int> .'
+            )
 
         process_batch(batch, rdf_file)
         print(f"Finished processing {count:,} records. Generated {len(nodes):,} nodes.")

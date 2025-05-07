@@ -2,7 +2,7 @@ DONE: 5(combine to and ~to to remove duplicates),
 DONE: 6 (same but count)
 DONE: 7 (duplicates)  Q676
 DONE: 8 (duplicates)
-FIXME: 12 (incorrect count)
+FIXME: 12 (incorrect count) (fucking fuck this dgaph, modify schema add unique neighbout field and fill it while loading)
 FIXME: 13 (too many) 1276217
 DONE: 14 (rename id and label)
 DONE: 15(remove shared_connections)

@@ -3,12 +3,13 @@ label: string .
 to: [uid] @count @reverse .
 synonym: [uid] @reverse .
 antonym: [uid] @reverse .
+unique_neighbors_count: int @index(int) .
 
 type Node{
     id
     label
     to
-
     synonym
     antonym
+    unique_neighbors_count
 }

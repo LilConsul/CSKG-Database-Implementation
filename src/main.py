@@ -1,14 +1,13 @@
 import time
-from multiprocessing.util import is_exiting
 
 import click
 
 from core import queries
 from core.distant_nodes import find_distant_relationships
-from core.message_handler import error_print, json_print, verbose_print, length_print
+from core.message_handler import error_print, json_print, length_print, verbose_print
+from core.shortest_path import shortest_path
 from core.similar_nodes import get_similar_nodes
 from core.utils import dgraph_read, dgraph_write, if_exist
-from core.shortest_path import shortest_path
 
 
 class AliasedGroup(click.Group):
@@ -141,58 +140,6 @@ def query_no_arg(name, query, help_text, err_text):
             error_print(err_text, error)
 
     return command
-
-
-@click.command()
-def find_nodes_most_neighbors():
-    """Find nodes with the most neighbors."""
-    try:
-        time_start = time.time()
-
-        offset = 0
-        max_neighbors = 0
-        nodes_with_max = []
-        more_nodes_possible = True
-
-        while more_nodes_possible:
-            results = dgraph_read(
-                queries.NODES_MOST_NEIGHBORS_QUERY,
-                variables={"$offset": str(offset)},
-            )
-
-            result_nodes = results.get("nodes_with_most_neighbors", [])
-            if not result_nodes:
-                break
-
-            # Set the max_neighbors from the first batch
-            if offset == 0:
-                max_neighbors = result_nodes[0].get("total_neighbors", 0)
-
-            # Collect nodes with max neighbors count
-            for node in result_nodes:
-                if node.get("total_neighbors") == max_neighbors:
-                    nodes_with_max.append(node)
-                else:
-                    more_nodes_possible = False
-                    break
-
-            # Check if we need another page
-            if more_nodes_possible and len(result_nodes) == 10:
-                offset += 10
-            else:
-                more_nodes_possible = False
-
-        time_end = time.time()
-
-        result = {"nodes_with_most_neighbors": nodes_with_max}
-        json_print(result)
-        verbose_print(
-            f"Found {len(nodes_with_max)} nodes with {max_neighbors} neighbors"
-        )
-        verbose_print(f"Query executed in {time_end - time_start:.2f} seconds")
-
-    except Exception as error:
-        error_print("finding nodes with most neighbors", error)
 
 
 @click.command()
@@ -383,8 +330,14 @@ count_nodes_no_predecessors_cmd = query_no_arg(
 add_aliases(count_nodes_no_predecessors_cmd, "11")
 cli.add_command(count_nodes_no_predecessors_cmd)
 
-add_aliases(find_nodes_most_neighbors, "12")
-cli.add_command(find_nodes_most_neighbors)
+find_nodes_most_neighbors_cmd = query_no_arg(
+    name="find-nodes-most-neighbors",
+    query=queries.NODES_MOST_NEIGHBORS_QUERY,
+    help_text="Find nodes with the most neighbors.",
+    err_text="finding nodes with the most neighbors",
+)
+add_aliases(find_nodes_most_neighbors_cmd, "12")
+cli.add_command(find_nodes_most_neighbors_cmd)
 
 count_nodes_single_neighbor_cmd = query_no_arg(
     name="count-nodes-single-neighbor",
