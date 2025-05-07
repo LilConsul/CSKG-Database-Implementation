@@ -73,26 +73,34 @@ query getNeighbors($id: string) {
 
 GRANDCHILDREN_QUERY = """
 query getGrandchildren($id: string) {
-  grandchildren(func: eq(id, $id)) @normalize{
+  var(func: eq(id, $id)) {
     to {
       to {
-        id:id
-        label:label
+        unique_nodes as uid
       }
     }
+  }
+  
+  grandchildren(func: uid(unique_nodes)) @normalize {
+    id: id
+    label: label
   }
 }
 """
 
 GRANDPARENTS_QUERY = """
 query getGrandparents($id: string) {
-  grandparents(func: eq(id, $id)) @normalize{
+  var(func: eq(id, $id)) {
     ~to {
       ~to {
-        id:id
-        label:label
+        unique_parents as uid
       }
     }
+  }
+  
+  grandparents(func: uid(unique_parents)) @normalize {
+    id: id
+    label: label
   }
 }
 """
