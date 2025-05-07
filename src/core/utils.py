@@ -6,6 +6,8 @@ from typing import Any, Dict, Optional
 import click
 import pydgraph
 
+from core.queries import IS_EXIST
+
 DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
 
 
@@ -139,3 +141,16 @@ def dgraph_write(mutations: Any, commit_now: bool = True) -> Dict[str, Any]:
         if DEBUG:
             click.echo(f"Error executing mutation: {e}", err=True)
         raise
+
+def if_exist(node_id: str):
+    """
+    Check if a node exists in the database.
+
+    Args:
+        node_id: The ID of the node to check
+
+    Returns:
+        bool: True if the node exists, False otherwise
+    """
+    result = dgraph_read(IS_EXIST, variables={"$id": node_id})
+    return bool(result["node_exists"][0]["count"])
