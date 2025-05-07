@@ -59,13 +59,14 @@ query getNeighbors($id: string) {
 """
 
 COUNT_NEIGHBORS_QUERY = """
-query countNeighbors($id: string) {
-  neighbors(func: eq(id, $id)) {
-    id
-    label
-    successors_count AS count(to)
-    predecessors_count AS count(~to)
-    total_neighbors: math(successors_count + predecessors_count)
+query getNeighbors($id: string) {
+  var(func: eq(id, $id)) {
+    succ as to
+    pred as ~to
+  }
+  
+  neighbors(func: uid(succ, pred)) {
+    count(uid)
   }
 }
 """
