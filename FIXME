@@ -1,10 +1,10 @@
-DONE 5(combine to and ~to to remove duplicates),
-DONE 6 (same but count)
-7 (duplicates)  Q676
-8 (duplicates)
-13 (too many) 1276217
-DONE 14 (rename id and label)
-DONE 15(remove shared_connections)
-16 Doesnt work, implement on your onw
+DONE: 5(combine to and ~to to remove duplicates),
+DONE: 6 (same but count)
+FIXME: 7 (duplicates)  Q676
+FIXME: 8 (duplicates)
+FIXME: 13 (too many) 1276217
+DONE: 14 (rename id and label)
+DONE: 15(remove shared_connections)
+DONE: 16 Doesnt work, implement your own pathfinder
 DONE 18 (should be 17)
-18 (socket closed fix, uwu)
+FIXME: 18 (socket closed fix, uwu)

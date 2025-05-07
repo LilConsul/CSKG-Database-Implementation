@@ -7,6 +7,7 @@ from core.distant_nodes import find_distant_relationships
 from core.message_handler import error_print, json_print, verbose_print
 from core.similar_nodes import get_similar_nodes
 from core.utils import dgraph_read, dgraph_write
+from core.shortest_path import shortest_path
 
 
 class AliasedGroup(click.Group):
@@ -235,10 +236,11 @@ def find_shortest_path(node_id1, node_id2):
     """Find the shortest path between two nodes, ignoring edge direction."""
     try:
         start_time = time.time()
-        results = dgraph_read(
-            queries.SHORTEST_PATH_QUERY,
-            variables={"$id1": str(node_id1), "$id2": str(node_id2)},
-        )
+        # results = dgraph_read(
+        #     queries.SHORTEST_PATH_QUERY,
+        #     variables={"$id1": str(node_id1), "$id2": str(node_id2)},
+        # )
+        results = shortest_path(node_id1, node_id2)
         end_time = time.time()
         json_print(results)
         verbose_print(f"Query executed in {end_time - start_time:.2f} seconds")

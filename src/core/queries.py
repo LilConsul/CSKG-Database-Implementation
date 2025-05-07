@@ -1,3 +1,11 @@
+IS_EXIST = """
+query checkNodeExists($id: string) {
+  node_exists(func: eq(id, $id)) {
+    count: count(uid)
+  }
+}
+"""
+
 SUCCESSORS_QUERY = """
 
 """
