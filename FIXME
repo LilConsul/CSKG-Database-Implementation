@@ -2,8 +2,8 @@ DONE: 5(combine to and ~to to remove duplicates),
 DONE: 6 (same but count)
 DONE: 7 (duplicates)  Q676
 DONE: 8 (duplicates)
-MAYBE DONE FIXME: 12 (incorrect count) (fucking fuck this dgaph, modify schema add unique neighbout field and fill it while loading)
-MAYBE DONE FIXME: 13 (too many) 1276217
+MAYBE DONE: 12 (incorrect count) (fucking fuck this dgaph, modify schema add unique neighbout field and fill it while loading)
+MAYBE DONE: 13 (too many) 1276217
 DONE: 14 (rename id and label)
 DONE: 15(remove shared_connections)
 DONE: 16 Doesnt work, implement your own pathfinder

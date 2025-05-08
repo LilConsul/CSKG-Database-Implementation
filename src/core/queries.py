@@ -60,14 +60,9 @@ query getNeighbors($id: string) {
 
 COUNT_NEIGHBORS_QUERY = """
 query getNeighbors($id: string) {
-  var(func: eq(id, $id)) {
-    succ as to
-    pred as ~to
-  }
-  
-  neighbors(func: uid(succ, pred)) {
-    count(uid)
-  }
+    neighbors(func: eq(id, $id)) {
+        count:unique_neighbors_count
+    }
 }
 """
 
