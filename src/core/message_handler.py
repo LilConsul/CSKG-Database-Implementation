@@ -15,7 +15,34 @@ def verbose_print(message):
 
 
 def json_print(data):
-    click.echo(json.dumps(data, indent=2))
+    ctx = click.get_current_context()
+    try:
+        if ctx.obj.get("raw", False):
+            if (
+                isinstance(data, list)
+                and data
+                and isinstance(data[0], dict)
+                and "label" in data[0]
+            ):
+                labels = [node["label"] for node in data]
+                click.echo(", ".join(labels))
+                return
+            elif isinstance(data, dict):
+                result = data.get(list(data.keys())[0], []) if data else []
+                if result and isinstance(result[0], dict) and "label" in result[0]:
+                    result = [item["label"] for item in result]
+                    click.echo(", ".join(result))
+                elif result and isinstance(result[0], dict) and "count" in result[0]:
+                    click.echo(result[0]["count"])
+                else:
+                    click.echo(result)
+                return
+            click.echo(data)
+            return
+        else:
+            click.echo(json.dumps(data, indent=2))
+    except Exception:
+        click.echo(json.dumps(data, indent=2))
 
 
 def length_print(function_name: str, results: dict):

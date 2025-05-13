@@ -76,8 +76,9 @@ def add_aliases(cmd, aliases):
 
 @click.group(cls=AliasedGroup, context_settings={"help_option_names": ["-h", "--help"]})
 @click.option("--verbose", "-v", is_flag=True, help="Enable verbose output.")
+@click.option("--raw", "-r", is_flag=True, help="Enable raw output.")
 @click.pass_context
-def cli(ctx, verbose):
+def cli(ctx, verbose, raw):
     """
     Command-line interface for managing and querying Dgraph knowledge graph operations.
 
@@ -86,6 +87,7 @@ def cli(ctx, verbose):
     """
     ctx.ensure_object(dict)
     ctx.obj["verbose"] = verbose
+    ctx.obj["raw"] = raw
 
 
 @click.command()
