@@ -151,7 +151,7 @@ def rename_node(node_id, new_label):
     """Rename a given node by updating its label."""
     try:
         if not if_exist(node_id):
-            error_print(rename_node.__name__, f"Node with ID {node_id} does not exist")
+            error_print("Rename node", f"Node with ID {node_id} does not exist")
 
         start_time = time.time()
         node_info = dgraph_read(
