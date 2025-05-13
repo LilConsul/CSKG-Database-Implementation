@@ -58,110 +58,110 @@
   <!-- Bars with groups -->
   <!-- Each group -->
   <g font-family="Arial" font-size="12">
-    <!-- Simple Lookups -->
+    <!-- Fast Category (< 0.1s) -->
     <g transform="translate(120,0)">
-      <rect y="498" width="28" height="2" class="fast" rx="2"/>
-      <text x="14" y="485" text-anchor="middle" font-weight="bold">0.01s</text>
-      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">find-succ</text>
-    </g>
-
-    <g transform="translate(160,0)">
-      <rect y="498" width="28" height="2" class="fast" rx="2"/>
+      <rect y="499" width="28" height="1" class="fast" rx="2"/>
       <text x="14" y="485" text-anchor="middle" font-weight="bold">0.01s</text>
       <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">count-succ</text>
     </g>
 
+    <g transform="translate(160,0)">
+      <rect y="499" width="28" height="1" class="fast" rx="2"/>
+      <text x="14" y="485" text-anchor="middle" font-weight="bold">0.01s</text>
+      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">count-pred</text>
+    </g>
+
     <g transform="translate(200,0)">
-      <rect y="498" width="28" height="2" class="fast" rx="2"/>
+      <rect y="499" width="28" height="1" class="fast" rx="2"/>
       <text x="14" y="485" text-anchor="middle" font-weight="bold">0.01s</text>
       <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">count-neigh</text>
     </g>
 
     <g transform="translate(240,0)">
-      <rect y="498" width="28" height="2" class="fast" rx="2"/>
-      <text x="14" y="485" text-anchor="middle" font-weight="bold">0.01s</text>
-      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">count-pred</text>
+      <rect y="495" width="28" height="5" class="fast" rx="2"/>
+      <text x="14" y="485" text-anchor="middle" font-weight="bold">0.05s</text>
+      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">find-neigh</text>
     </g>
 
     <g transform="translate(280,0)">
-      <rect y="498" width="28" height="2" class="fast" rx="2"/>
-      <text x="14" y="485" text-anchor="middle" font-weight="bold">0.01s</text>
-      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">grandchild</text>
+      <rect y="494" width="28" height="6" class="fast" rx="2"/>
+      <text x="14" y="484" text-anchor="middle" font-weight="bold">0.06s</text>
+      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">shortest-path</text>
     </g>
 
+    <!-- Medium Category (0.1s - 1s) -->
     <g transform="translate(320,0)">
-      <rect y="497" width="28" height="3" class="fast" rx="2"/>
-      <text x="14" y="484" text-anchor="middle" font-weight="bold">0.03s</text>
-      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">find-pred</text>
+      <rect y="484" width="28" height="16" class="medium" rx="2"/>
+      <text x="14" y="474" text-anchor="middle" font-weight="bold">0.16s</text>
+      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">single-neigh</text>
     </g>
 
-    <!-- Path Finding -->
     <g transform="translate(360,0)">
-      <rect y="497" width="28" height="3" class="fast" rx="2"/>
-      <text x="14" y="484" text-anchor="middle" font-weight="bold">0.03s</text>
-      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">find-neigh</text>
+      <rect y="483" width="28" height="17" class="medium" rx="2"/>
+      <text x="14" y="473" text-anchor="middle" font-weight="bold">0.17s</text>
+      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">grandchild</text>
     </g>
 
     <g transform="translate(400,0)">
       <rect y="480" width="28" height="20" class="medium" rx="2"/>
-      <text x="14" y="468" text-anchor="middle" font-weight="bold">0.29s</text>
-      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">shortest-path</text>
+      <text x="14" y="470" text-anchor="middle" font-weight="bold">0.20s</text>
+      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">find-pred</text>
     </g>
 
     <g transform="translate(440,0)">
-      <rect y="477" width="28" height="23" class="medium" rx="2"/>
-      <text x="14" y="465" text-anchor="middle" font-weight="bold">0.33s</text>
+      <rect y="474" width="28" height="26" class="medium" rx="2"/>
+      <text x="14" y="464" text-anchor="middle" font-weight="bold">0.26s</text>
       <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">grandparent</text>
     </g>
 
     <g transform="translate(480,0)">
-      <rect y="429" width="28" height="71" class="medium" rx="2"/>
-      <text x="14" y="417" text-anchor="middle" font-weight="bold">0.71s</text>
-      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">count-nodes</text>
+      <rect y="472" width="28" height="28" class="medium" rx="2"/>
+      <text x="14" y="462" text-anchor="middle" font-weight="bold">0.28s</text>
+      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">find-succ</text>
     </g>
 
     <g transform="translate(520,0)">
-      <rect y="394" width="28" height="106" class="medium" rx="2"/>
-      <text x="14" y="382" text-anchor="middle" font-weight="bold">1.34s</text>
+      <rect y="434" width="28" height="66" class="medium" rx="2"/>
+      <text x="14" y="424" text-anchor="middle" font-weight="bold">0.66s</text>
+      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">most-neigh</text>
+    </g>
+
+    <!-- Slow Category (1s - 5s) -->
+    <g transform="translate(560,0)">
+      <rect y="390" width="28" height="110" class="slow" rx="2"/>
+      <text x="14" y="380" text-anchor="middle" font-weight="bold">2.19s</text>
       <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">similar</text>
     </g>
 
-    <!-- Complex Analysis -->
-    <g transform="translate(560,0)">
-      <rect y="316" width="28" height="184" class="slow" rx="2"/>
-      <text x="14" y="304" text-anchor="middle" font-weight="bold">3.68s</text>
-      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">no-predecessors</text>
-    </g>
-
     <g transform="translate(600,0)">
-      <rect y="302" width="28" height="198" class="slow" rx="2"/>
-      <text x="14" y="290" text-anchor="middle" font-weight="bold">3.97s</text>
+      <rect y="372" width="28" height="128" class="slow" rx="2"/>
+      <text x="14" y="362" text-anchor="middle" font-weight="bold">2.56s</text>
       <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">distant-ant</text>
     </g>
 
     <g transform="translate(640,0)">
-      <rect y="295" width="28" height="205" class="slow" rx="2"/>
-      <text x="14" y="283" text-anchor="middle" font-weight="bold">4.11s</text>
-      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">no-successors</text>
-    </g>
-
-    <g transform="translate(680,0)">
-      <rect y="284" width="28" height="216" class="slow" rx="2"/>
-      <text x="14" y="272" text-anchor="middle" font-weight="bold">4.32s</text>
+      <rect y="361" width="28" height="139" class="slow" rx="2"/>
+      <text x="14" y="351" text-anchor="middle" font-weight="bold">2.78s</text>
       <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">distant-syn</text>
     </g>
 
-    <!-- Graph Operations -->
+    <g transform="translate(680,0)">
+      <rect y="358" width="28" height="142" class="slow" rx="2"/>
+      <text x="14" y="348" text-anchor="middle" font-weight="bold">2.84s</text>
+      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">count-nodes</text>
+    </g>
+
+    <!-- Very Slow Category (> 5s) -->
     <g transform="translate(720,0)">
-      <rect y="154" width="28" height="346" class="very-slow" rx="2"/>
-      <text x="14" y="142" text-anchor="middle" font-weight="bold">8.62s</text>
-      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">single-neighbor</text>
+      <rect y="278" width="28" height="222" class="very-slow" rx="2"/>
+      <text x="14" y="268" text-anchor="middle" font-weight="bold">4.43s</text>
+      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">no-pred</text>
     </g>
 
     <g transform="translate(760,0)">
-      <rect y="134" width="28" height="366" class="very-slow" rx="2"/>
-      <text x="14" y="122" text-anchor="middle" font-weight="bold">9.12s</text>
-      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">most-neighbors</text>
+      <rect y="264" width="28" height="236" class="very-slow" rx="2"/>
+      <text x="14" y="254" text-anchor="middle" font-weight="bold">5.28s</text>
+      <text x="14" y="530" transform="rotate(45, 14, 530)" text-anchor="start" font-size="12">no-succ</text>
     </g>
   </g>
 </svg>
