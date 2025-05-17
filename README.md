@@ -75,6 +75,7 @@ label: string @index(term) .
 to: [uid] @reverse @facet(id, label) .
 synonym: [uid] @reverse .
 antonym: [uid] @reverse .
+unique_neighbors_count: int @index(int) .
 
 type Node {
     id
@@ -82,6 +83,7 @@ type Node {
     to
     synonym
     antonym
+    unique_neighbors_count
 }
 ```
 
@@ -91,13 +93,14 @@ type Node {
 
 ### Field Descriptions
 
-| Field     | Type     | Constraints                             | Description                                                                                                                                                                                                                                                                  |
-|-----------|----------|-----------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `id`      | `string` | `@unique @index(hash)`                  | Unique identifier for each node. The hash index enables fast lookups by ID.                                                                                                                                                                                                  |
-| `label`   | `string` | `@index(term)`                          | Descriptive label for the node. Term indexing supports text search functionality.                                                                                                                                                                                            |
-| `to`      | `[uid]`  | `@reverse` `@count` `@facet(id, label)` | Array of references to connected nodes. The `@reverse` directive enables bidirectional navigation between nodes. The `@count` property stores the amount of references connected nodes. Each connection includes facets (edge properties) storing `id` and `label` metadata. |
-| `synonym` | `[uid]`  | `@reverse`                              | Direct links to synonym nodes, enabling efficient synonym searching and traversal in both directions.                                                                                                                                                                        |
-| `antonym` | `[uid]`  | `@reverse`                              | Direct links to antonym nodes, enabling efficient antonym searching and traversal in both directions.                                                                                                                                                                        |
+| Field                    | Type     | Constraints                             | Description                                                                                                                                                                                                                                                                  |
+|--------------------------|----------|-----------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `id`                     | `string` | `@unique @index(hash)`                  | Unique identifier for each node. The hash index enables fast lookups by ID.                                                                                                                                                                                                  |
+| `label`                  | `string` | `@index(term)`                          | Descriptive label for the node. Term indexing supports text search functionality.                                                                                                                                                                                            |
+| `to`                     | `[uid]`  | `@reverse` `@count` `@facet(id, label)` | Array of references to connected nodes. The `@reverse` directive enables bidirectional navigation between nodes. The `@count` property stores the amount of references connected nodes. Each connection includes facets (edge properties) storing `id` and `label` metadata. |
+| `synonym`                | `[uid]`  | `@reverse`                              | Direct links to synonym nodes, enabling efficient synonym searching and traversal in both directions.                                                                                                                                                                        |
+| `antonym`                | `[uid]`  | `@reverse`                              | Direct links to antonym nodes, enabling efficient antonym searching and traversal in both directions.                                                                                                                                                                        |
+| `unique_neighbors_count` | `int`    | `@index(int)`                           | Stores the count of unique nodes connected to this node. The integer index enables efficient filtering and sorting by neighbor count, which is essential for queries like finding nodes with the most connections.                                                           |
 
 ### Edge Properties (Facets)
 
@@ -260,54 +263,14 @@ System can find all simillar nodes, that share the same parent or child with the
 }
 ```
 
-### Displaying Time Measurements
-
-Add the `--verbose` or flag to any command to display detailed execution time measurements:
-
-```bash
-./dbcli.sh --verbose count-predecessors /c/en/happy 
-```
-
-```
-`query output`
-Query executed in 0.34 seconds
-```
-
 ## 🔍 Query Examples
 
 #### Find Nodes With Single Neighbor
 
 ```
-query nodesWithSingleNeighbor{
-  var(func: has(id)) {
-    successors_count as count(to)
-    predecessors_count as count(~to)
-    total_neighbors as math(successors_count + predecessors_count)
-  }
-
-  nodes_with_single_neighbor(func: has(id))
-      @filter(eq(val(total_neighbors), 1))
-      {
-        amount:count(uid)
-      }
-}
-```
-
-#### Find Shortest Path Between Two Nodes
-
-```
-query shortestPath($id1: string, $id2: string) {
-  A as var(func: eq(id, $id1))
-  B as var(func: eq(id, $id2))
-
-  shortestPath as shortest(from: uid(A), to: uid(B)) {
-    to
-    ~to
-  }
-
-  path(func: uid(shortestPath)) {
-    id
-    label
+query countNodesWithSingleNeighbor {
+  single_neighbor_count(func: eq(unique_neighbors_count, 1)) {
+    count(uid)
   }
 }
 ```
@@ -315,19 +278,42 @@ query shortestPath($id1: string, $id2: string) {
 #### Find Nodes With Most Neighbors
 
 ```
-query nodesWithMostNeighbors($offset: string) {
-  var(func: has(id)) {
-    successors_count as count(to)
-    predecessors_count as count(~to)
-    total_neighbors as math(successors_count + predecessors_count)
+query findNodesWithMostNeighbors {
+  var(func: has(id), orderdesc: unique_neighbors_count, first: 1) {
+    max_val as unique_neighbors_count
   }
-      
-  nodes_with_most_neighbors(func: has(id), orderdesc: val(total_neighbors), first: 10, offset: $offset) {
-    total_neighbors: val(total_neighbors)
+
+  nodes_with_most_neighbors(func: eq(unique_neighbors_count, val(max_val))) {
     id
     label
+    unique_neighbors_count
   }
 }
+```
+
+### Helping flags
+
+#### Verbose
+
+Add the `--verbose` or `-v` flag to any command to display detailed execution time measurements and if needed amount of
+elements in the result:
+
+```bash
+./dbcli.sh --verbose count-predecessors /c/en/happy 
+```
+
+```
+{query_name} has {amount} of elements
+`query output`
+Query executed in 0.34 seconds
+```
+
+#### Raw
+
+Add the `--raw` or `-r` flag to any command to display raw query results without formatting:
+
+```
+label1, label2, label3
 ```
 
 ## 🔄 Implementation Process
@@ -429,10 +415,14 @@ following performance categories:
 
 #### Performance Categories:
 
-- **Fast (< 0.1s)**: Simple lookups (find/count successors, predecessors, neighbors)
-- **Medium (0.1s - 1s)**: Intermediate path finding and basic counts
-- **Slow (1s - 5s)**: Complex relationship analysis
-- **Very Slow (> 5s)**: Full graph operations requiring large-scale traversal
+- **Fast (< 0.1s)**: Simple lookups and count operations (count-successors, count-predecessors, count-neighbors,
+  find-neighbors, find-shortest-path)
+- **Medium (0.1s - 1s)**: Intermediate operations (count-nodes-single-neighbor, find-nodes-most-neighbors,
+  find-successors, find-predecessors, find-grandchildren, find-grandparents)
+- **Slow (1s - 5s)**: Complex relationship analysis (find-similar-nodes, find-distant-synonyms, find-distant-antonyms,
+  count-nodes)
+- **Very Slow (> 5s)**: Full graph operations requiring large-scale traversal (count-nodes-no-successors,
+  count-nodes-no-predecessors)
 
 #### Schema Optimization Impact:
 
@@ -446,11 +436,13 @@ following performance categories:
     - Stores count metadata directly with relationships
     - Enables sub-0.1s performance for `count-successors`, `count-predecessors`, and `count-neighbors`
     - Without @count, these operations would require full traversal (>1s)
-    - Crucial for keeping the most demanding queries (`count-nodes-single-neighbor`, `find-nodes-most-neighbors`) under
-      10 seconds
 
-These directives significantly improved our most frequent operations, with 7 of 17 queries
-achieving <0.1s execution time.
+- **@index(int)**: Enables efficient filtering and sorting for integer fields
+    - Improves performance for queries based on neighbor counts
+    - Essential for queries like `count-nodes-single-neighbor` (0.16s) and `find-nodes-most-neighbors` (0.66s)
+
+These directives significantly improved our most frequent operations, with 5 of 17 queries achieving <0.1s execution
+time.
 
 ## 👥 Team Contributions
 
