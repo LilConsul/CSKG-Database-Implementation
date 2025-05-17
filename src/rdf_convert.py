@@ -5,11 +5,13 @@ import hashlib
 import re
 import unicodedata
 from functools import lru_cache
+import os
 
 from core.measure_time import measure_time
 
 csv.field_size_limit(2**31 - 1)
 
+# Pre-compile regex patterns only once
 ESCAPE_PATTERNS = [
     (re.compile(r"\\"), r"\\\\"),
     (re.compile(r'"'), r"\""),
@@ -18,53 +20,59 @@ ESCAPE_PATTERNS = [
     (re.compile(r"\t"), r"\t"),
 ]
 
+# Compile frequently used regex patterns once
+NON_ASCII_OR_SPECIAL_CHARS = re.compile(r"[^\x00-\x7F]|[^\w]")
+NON_WORD_CHARS = re.compile(r"[^\w]")
+NON_ASCII_CHARS = re.compile(r"[^\x00-\x7F]")
 
-@lru_cache(maxsize=4096)
+# Constants for optimization
+DEFAULT_BATCH_SIZE = 250_000
+DEFAULT_COMPRESSION_LEVEL = 3
+
+
+@lru_cache(maxsize=8192)
 def escape_string(s):
+    """Escape special characters in strings for RDF output with improved performance"""
     if not s:
         return ""
+
+    # Fast path: if no special characters, return the string as-is
+    if not any(char in s for char in '\\"\n\r\t'):
+        return s
+
+    # Otherwise, apply the substitutions
     result = s
     for pattern, replacement in ESCAPE_PATTERNS:
         result = pattern.sub(replacement, result)
     return result
 
 
-# @lru_cache(maxsize=4096)
-# def sanitize_id(id_string):
-#     if not id_string:
-#         return ""
-#
-#     normalized = unicodedata.normalize("NFKD", id_string)
-#
-#     # Replace non-word characters with their Unicode code point with delimiters
-#     def replacer(match):
-#         char = match.group(0)
-#         return f"_U{ord(char):04X}_"
-#
-#     sanitized = re.sub(r"[^\w]", replacer, normalized, flags=re.UNICODE)
-#     return sanitized
-
-
-@lru_cache(maxsize=4096)
+@lru_cache(maxsize=8192)
 def sanitize_id(id_string):
+    """Sanitize node IDs to make them valid in RDF format with improved performance"""
     if not id_string:
         return ""
 
+    # Use cached result if available (lru_cache decorator handles this)
     normalized = unicodedata.normalize("NFKD", id_string)
 
-    if re.search(r"[^\x00-\x7F]|[^\w]", normalized):
-        prefix = re.sub(r"[^\w]", "", re.sub(r"[^\x00-\x7F]", "", normalized))[:8]
-        if not prefix:
-            prefix = "id"
-
-        hash_obj = hashlib.md5(id_string.encode("utf-8"))
-        hash_digest = base64.b32encode(hash_obj.digest()).decode("ascii")[:12]
-
-        return f"{prefix}_{hash_digest}"
-    else:
+    # Fast path for simple IDs (most common case)
+    if not NON_ASCII_OR_SPECIAL_CHARS.search(normalized):
         return normalized
 
+    # For complex IDs, use a deterministic hash-based approach
+    prefix = NON_WORD_CHARS.sub("", NON_ASCII_CHARS.sub("", normalized))[:8]
+    if not prefix:
+        prefix = "id"
 
+    # Use a more efficient hashing approach
+    hash_obj = hashlib.md5(id_string.encode("utf-8"))
+    hash_digest = base64.b32encode(hash_obj.digest()).decode("ascii")[:12]
+
+    return f"{prefix}_{hash_digest}"
+
+
+@lru_cache(maxsize=4096)
 def sanitize_label(node_id, label):
     """Sanitize the label by returning the most appropriate label based on node_id left-to-right position."""
     if not label:
@@ -81,7 +89,7 @@ def sanitize_label(node_id, label):
             best_word = word
             best_position = position
 
-    return best_word
+    return best_word or label.split("|")[0]  # Default to first word if no match found
 
 
 def get_optimal_batch_size():
@@ -148,7 +156,7 @@ def create_default_label(node_id):
 
 @measure_time
 def convert_tsv_to_rdf_gzip(
-    input_file, output_file, batch_size=250_000, *, total_lines=None
+    input_file, output_file, batch_size=DEFAULT_BATCH_SIZE, *, total_lines=None
 ):
     if total_lines is None:
         use_tqdm = False
@@ -179,10 +187,9 @@ def convert_tsv_to_rdf_gzip(
     batch = []
     count = 0
     progress_interval = min(100_000, batch_size // 10)
-    compression_level = 3
 
     with gzip.open(
-        output_file, "wt", encoding="utf-8", compresslevel=compression_level
+        output_file, "wt", encoding="utf-8", compresslevel=DEFAULT_COMPRESSION_LEVEL
     ) as rdf_file:
         with gzip.open(input_file, "rt", encoding="utf-8", errors="replace") as f:
             reader = csv.reader(f, delimiter="\t", quoting=csv.QUOTE_NONE)
