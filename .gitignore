@@ -5,6 +5,8 @@ storage/
 
 #time tests
 query_times.txt
+work_test_results.txt
+work_test_timings.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
