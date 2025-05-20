@@ -237,7 +237,7 @@ out13_count=$(extract_count "$out13")
 check_count_match "$out13_count" "$expected13" "Task 13"
 
 # 14. Test rename functionality
-test_rename_node "/c/en/test_node"
+test_rename_node "/c/en/transportation_topic/n"
 
 # 15. Similar nodes to /c/en/emission_nebula
 expected15_count="13"
