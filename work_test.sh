@@ -119,7 +119,7 @@ run_command() {
 test_rename_node() {
     node_id=$1
     temp_name="TEMP_NAME_FOR_TEST"
-    original_label=$(basename "$node_id")
+    original_label="$node_id"
 
     # First rename
     echo "Renaming $node_id to $temp_name..."

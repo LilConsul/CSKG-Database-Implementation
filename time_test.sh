@@ -55,7 +55,7 @@ run_two_arg_command() {
 test_rename_node() {
     node_id=$1
     temp_name="TEMP_NAME_FOR_TIMING_TEST"
-    original_name=$(basename "$node_id")
+    original_name="$node_id"
 
     echo "Testing rename-node by renaming $node_id to $temp_name and back..."
     # First rename
