@@ -21,18 +21,27 @@ log_time() {
     # Extract the time using grep
     time_line=$(echo "$output" | grep "Query executed in" | tail -1)
     if [[ -n "$time_line" ]]; then
-        # Preserve all decimal places in the execution time - improved regex to capture all decimals
+        # Preserve all decimal places in the execution time
         execution_time=$(echo "$time_line" | sed -E 's/Query executed in ([0-9]+\.[0-9]+) seconds/\1/' | tr -d '\n\r')
 
-        # Save to file with all decimal places
-        echo "$command: $execution_time seconds" >> "$TIMING_FILE"
+        # Save to file without color codes
+        echo "⏱️  TIMING: $command completed in $execution_time seconds" >> "$OUTPUT_FILE"
 
-        # Print to console with more visibility and all decimal places
-        echo -e "\033[1;36m⏱️  TIMING: $command completed in $execution_time seconds\033[0m" | tee -a "$OUTPUT_FILE"
+        # Print to console with color
+        echo -e "\033[1;36m⏱️  TIMING: $command completed in $execution_time seconds\033[0m"
+
+        # Save timing to timing file
+        echo "$command: $execution_time seconds" >> "$TIMING_FILE"
         return 0
     else
+        # Save to file without color codes
+        echo "⏱️  TIMING: $command - No timing information found" >> "$OUTPUT_FILE"
+
+        # Print to console with color
+        echo -e "\033[1;33m⏱️  TIMING: $command - No timing information found\033[0m"
+
+        # Save to timing file
         echo "$command: No timing information found" >> "$TIMING_FILE"
-        echo -e "\033[1;33m⏱️  TIMING: $command - No timing information found\033[0m" | tee -a "$OUTPUT_FILE"
         return 1
     fi
 }
@@ -112,15 +121,6 @@ test_rename_node() {
     temp_name="TEMP_NAME_FOR_TEST"
     original_label=$(basename "$node_id")
 
-    # Check if node exists, if not use a known existing node
-    echo "Checking if $node_id exists..."
-    node_check=$(./dbcli.sh find-neighbors "$node_id" 2>&1)
-    if echo "$node_check" | grep -q "does not exist"; then
-        echo "Test node does not exist, using /c/en/happy instead..."
-        node_id="/c/en/happy"
-        original_label=$(basename "$node_id")
-    fi
-
     # First rename
     echo "Renaming $node_id to $temp_name..."
     output1=$(./dbcli.sh --verbose rename-node "$node_id" "$temp_name" 2>&1)
@@ -130,7 +130,7 @@ test_rename_node() {
     # Check if rename was successful
     if echo "$output1" | grep -q "Successfully renamed"; then
         # Verify new node exists
-        renamed_node="/c/en/$temp_name"
+        renamed_node="$temp_name"
         check_output=$(./dbcli.sh find-neighbors "$renamed_node" 2>&1)
 
         if ! echo "$check_output" | grep -q "does not exist"; then
