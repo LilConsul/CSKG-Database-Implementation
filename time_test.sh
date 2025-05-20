@@ -58,15 +58,6 @@ test_rename_node() {
     original_name=$(basename "$node_id")
 
     echo "Testing rename-node by renaming $node_id to $temp_name and back..."
-
-    # Check if node exists, if not use a known existing node
-    node_check=$(./dbcli.sh find-neighbors "$node_id" 2>&1)
-    if echo "$node_check" | grep -q "does not exist"; then
-        echo "Test node does not exist, using /c/en/happy instead..."
-        node_id="/c/en/happy"
-        original_name=$(basename "$node_id")
-    fi
-
     # First rename
     echo "Renaming $node_id to $temp_name..."
     output1=$(./dbcli.sh --verbose rename-node "$node_id" "$temp_name" 2>&1)
@@ -76,7 +67,7 @@ test_rename_node() {
     # Check if rename was successful
     if echo "$output1" | grep -q "Successfully renamed"; then
         # Verify new node exists
-        renamed_node="/c/en/$temp_name"
+        renamed_node="$temp_name"
         check_output=$(./dbcli.sh find-neighbors "$renamed_node" 2>&1)
 
         if ! echo "$check_output" | grep -q "does not exist"; then
@@ -127,7 +118,7 @@ run_two_arg_command "find-distant-synonyms" "$NODE_ID1" "$DISTANCE"
 run_two_arg_command "find-distant-antonyms" "$NODE_ID1" "$DISTANCE"
 
 # Test rename-node with a test node
-TEST_NODE="/c/en/test_timing"
+TEST_NODE="/c/en/happy"
 test_rename_node "$TEST_NODE"
 
 echo "All queries completed. Timing results saved to $OUTPUT_FILE"
