@@ -145,13 +145,14 @@ def convert_tsv_to_rdf_gzip(
     print(f"Converting {input_file} to RDF format...")
 
     nodes = set()
+    # Store only node pairs that haven't been written to the output file yet
     node_relationships = {}  # Key: (node1_id, node2_id), Value: list of (relation_id, relation_label) tuples
-    processed_node_pairs = set()
-    nodes_without_labels = set()
     id_mapping = {}
     sanitized_to_original = {}  # Mapping from sanitized ID to original ID
+    nodes_without_labels = set()
 
-    # Track both outgoing and incoming connections separately
+    # Track both outgoing and incoming connections using dictionaries with integer counters instead of sets
+    # This reduces memory usage compared to storing full set objects
     outgoing_neighbors = {}  # Key: node_id, Value: set of outgoing neighbor node_ids
     incoming_neighbors = {}  # Key: node_id, Value: set of incoming neighbor node_ids
 
@@ -164,6 +165,7 @@ def convert_tsv_to_rdf_gzip(
     count = 0
     progress_interval = min(100_000, batch_size // 10)
     compression_level = 3
+    processed_relationships_count = 0
 
     with gzip.open(
         output_file, "wt", encoding="utf-8", compresslevel=compression_level
@@ -176,9 +178,7 @@ def convert_tsv_to_rdf_gzip(
             if use_tqdm:
                 pbar = tqdm(total=total_lines, desc="Converting", unit="records")
 
-            iterator = reader
-
-            for row in iterator:
+            for row in reader:
                 if len(row) < 4:
                     if use_tqdm:
                         pbar.update(1)
@@ -297,19 +297,10 @@ def convert_tsv_to_rdf_gzip(
                 elif count % progress_interval == 0:
                     print(f"Processed {count:,} records...")
 
-                if count % batch_size == 0:
-                    # Process relationships for this batch, but only those not already processed
-                    new_relationships = {
-                        k: v
-                        for k, v in node_relationships.items()
-                        if k not in processed_node_pairs
-                    }
-                    process_relationships(new_relationships, batch)
-                    # Add processed pairs to our tracking set
-                    processed_node_pairs.update(new_relationships.keys())
+                # Process in batches to avoid excessive memory usage
+                if len(batch) >= batch_size // 2 or len(node_relationships) >= batch_size // 10:
+                    processed_relationships_count += process_relationships(node_relationships, batch)
                     node_relationships.clear()
-
-                    # Process the batch
                     process_batch(batch, rdf_file)
                     if not use_tqdm:
                         print(f"Processed {count:,} records. Nodes: {len(nodes):,}")
@@ -317,33 +308,35 @@ def convert_tsv_to_rdf_gzip(
             if use_tqdm:
                 pbar.close()
 
-        # Process remaining relationships that haven't been processed yet
-        new_relationships = {
-            k: v for k, v in node_relationships.items() if k not in processed_node_pairs
-        }
-        process_relationships(new_relationships, batch)
+        # Process remaining relationships
+        processed_relationships_count += process_relationships(node_relationships, batch)
+        node_relationships.clear()
 
+        # Process remaining nodes without labels
         for node_id in nodes_without_labels:
             sanitized_id = id_mapping[node_id]
             # Create a default label based on the node ID
             default_label = create_default_label(node_id)
             batch.append(f'_:{sanitized_id} <label> "{escape_string(default_label)}" .')
 
-        # Get all node IDs that appear in either outgoing or incoming connections
-        # This part of your code correctly counts neighbors
+        # Add neighbor counts to nodes
         all_node_ids = set(outgoing_neighbors.keys()) | set(incoming_neighbors.keys())
         for node_id in all_node_ids:
             out_neighbors = outgoing_neighbors.get(node_id, set())
             in_neighbors = incoming_neighbors.get(node_id, set())
-            total_unique_neighbors = len(
-                out_neighbors | in_neighbors
-            )  # Union of both sets
+            total_unique_neighbors = len(out_neighbors | in_neighbors)
             batch.append(
                 f'_:{node_id} <unique_neighbors_count> "{total_unique_neighbors}"^^<xs:int> .'
             )
 
+            # Free memory as we go
+            if node_id in outgoing_neighbors:
+                del outgoing_neighbors[node_id]
+            if node_id in incoming_neighbors:
+                del incoming_neighbors[node_id]
+
         process_batch(batch, rdf_file)
-        print(f"Finished processing {count:,} records. Generated {len(nodes):,} nodes.")
+        print(f"Finished processing {count:,} records. Generated {len(nodes):,} nodes. Processed {processed_relationships_count:,} relationships.")
 
 
 def process_relationships(node_relationships, batch):
@@ -352,27 +345,43 @@ def process_relationships(node_relationships, batch):
 
     for (node1_id, node2_id), relations in node_relationships.items():
         total_relationships += 1
-        combined_ids = []
-        combined_labels = []
 
-        for relation, relation_label in relations:
-            combined_ids.append(escape_string(relation))
-            combined_labels.append(escape_string(relation_label))
+        # Optimize for the common case of a single relation
+        if len(relations) == 1:
+            relation, relation_label = relations[0]
+            escaped_relation = escape_string(relation)
+            escaped_label = escape_string(relation_label)
 
-            # Check for synonym/antonym relationships for special handling of distant synonyms and antonyms
-            # Since we are using facets to store the relationship and facets doesnt support indexing we may want to this additional field
+            # Check for special relationship types
             if "/r/Synonym" in relation:
                 batch.append(f"_:{node1_id} <synonym> _:{node2_id} .")
-
             if "/r/Antonym" in relation:
                 batch.append(f"_:{node1_id} <antonym> _:{node2_id} .")
 
-        if len(relations) == 1:
-            relation, relation_label = relations[0]
             batch.append(
-                f'_:{node1_id} <to> _:{node2_id} (id="{escape_string(relation)}", label="{escape_string(relation_label)}") .'
+                f'_:{node1_id} <to> _:{node2_id} (id="{escaped_relation}", label="{escaped_label}") .'
             )
         else:
+            # For multiple relations, process and join
+            seen_types = set()
+            combined_ids = []
+            combined_labels = []
+
+            for relation, relation_label in relations:
+                escaped_relation = escape_string(relation)
+                escaped_label = escape_string(relation_label)
+                combined_ids.append(escaped_relation)
+                combined_labels.append(escaped_label)
+
+                # Check for special relationship types, but avoid duplicates
+                if "/r/Synonym" in relation and "synonym" not in seen_types:
+                    batch.append(f"_:{node1_id} <synonym> _:{node2_id} .")
+                    seen_types.add("synonym")
+
+                if "/r/Antonym" in relation and "antonym" not in seen_types:
+                    batch.append(f"_:{node1_id} <antonym> _:{node2_id} .")
+                    seen_types.add("antonym")
+
             combined_id = "<;>".join(combined_ids)
             combined_label = "<;>".join(combined_labels)
             batch.append(
