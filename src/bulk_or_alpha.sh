@@ -43,14 +43,7 @@ RUN_alpha () {
 RUN_BulkLoader () {
     if check_existing_RDF && check_existing_Schema; then
         echo "Dgraph BulkLoader Starting..."
-        # Basic parameters compatible with older Dgraph versions
-        dgraph bulk -f ${RDFFILE} -s ${SCHEMA} \
-            --reduce_shards=1 \
-            --map_shards=2 \
-            --zero=zero:5080 \
-            --tmp=./tmp \
-            --http=":8081" \
-            --store_xids=true
+        dgraph bulk -f ${RDFFILE} -s ${SCHEMA} --reduce_shards=1 --zero=zero:5080
         return 0
     else
         echo "You need to provide both an RDF and a Schema file"
