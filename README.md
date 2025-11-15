@@ -446,7 +446,7 @@ time.
 
 ## 👥 Team Contributions
 
-**Shevchenko Denys**:
+[**Shevchenko Denys**](https://github.com/LilConsul):
 
 - Infrastructure & DevOps:
     - Docker configuration and optimization
@@ -459,7 +459,7 @@ time.
     - Distant synonyms/antonyms analysis
     - Pathfinding query
 
-**Karabanov Yehor**:
+[**Karabanov Yehor**](https://github.com/yehorkarabanov):
 
 - Database Schema Architecture:
     - Graph data model design
